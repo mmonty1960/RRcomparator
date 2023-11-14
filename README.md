@@ -32,6 +32,7 @@ Linux (preferred method):
 
 MS Windows (limited features, without 2D contour map!)
 Simply double-click on rrcmp_WinExecLauncher.bat file. Unfortunately at the present the 2D countour-maps feature is not active on Windows.
+![GUI_rrcmp](https://github.com/mmonty1960/RRcomparator/assets/86962852/3206951e-86bd-4082-97a8-d3ab3a6260ac)
 
 
 License:
