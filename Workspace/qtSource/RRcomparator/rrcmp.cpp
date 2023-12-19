@@ -8,6 +8,8 @@
 #include <QCheckBox>
 #include <QTextStream>
 #include <QDir>
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
 
 using namespace std;
 using namespace cv;
@@ -47,11 +49,14 @@ double range[Npar][Nptn+1][2];
 //          [iPar][iPtn][1] max
 double Vservice[3];
 
-QString dir="/run/media/marco/d2quadra/VISproPT/RoundRobin/";
+QString dir;
 QString partner[Nptn]={"ENEA","FISE","DLR","NREL","SANDIA"};
 QString partnerChar[Nptn]={"E","F","D","N","S"};
 QString param[Npar]={"z","Dx","Dy","devZ","devDx","devDy"};
 QString specim[6]={"inner#60","inner#61","inner#62","outer#93","outer#97","outer#99"};
+
+QwtPlot *G1;
+int iOpenG1=0;//G1 is not initializated
 
 //invoked functions
 int NINT(double x);
@@ -66,7 +71,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 1.0 10 November 2023\n\n");
+    printf("         version 2.0 19 December 2023\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -153,6 +158,11 @@ RRcmp::RRcmp(QWidget *parent)
     idToCheckBox["checkBox_2"]=ui->checkBox_2;
     idToCheckBox["checkBox_3"]=ui->checkBox_3;
     idToCheckBox["checkBox_4"]=ui->checkBox_4;
+    idToCheckBox["checkBox_oPG_0"]=ui->checkBox_oPG_0;
+    idToCheckBox["checkBox_oPG_1"]=ui->checkBox_oPG_1;
+    idToCheckBox["checkBox_oPG_2"]=ui->checkBox_oPG_2;
+    idToCheckBox["checkBox_oPG_3"]=ui->checkBox_oPG_3;
+    idToCheckBox["checkBox_oPG_4"]=ui->checkBox_oPG_4;
 
     // parameter initialization
 #ifdef __unix__
@@ -284,8 +294,9 @@ void RRcmp::loadData(int iPtn){
         int nV=List.count();
         iC++;
         if(nV!=8){
-            printf("ERROR: data file must consist of 8 column; @iC=%d found %d\n",iC,nV);
-            printf("line0 %s\n",line.toStdString().c_str());
+            printf("\nERROR: data file must consist of 8 column; @iC=%d found %d\n",iC,nV);
+            printf("skipped line %s\n",line.toStdString().c_str());
+            continue;
         }
         pezzo=List.at(0).toLocal8Bit().constData();
         x=pezzo.toDouble();
@@ -441,6 +452,8 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
 void RRcmp::displayAP(){
     int iPar=ui->comboBox_par->currentIndex();
     printf("->displayAP for iPar=%d\n",iPar);
+    int iPtn0=ui->comboBox_iPtn0->currentIndex();
+    int iPtn1=ui->comboBox_iPtn1->currentIndex();
     ui->comboBox_iPtn0->clear();
     ui->comboBox_iPtn1->clear();
     Qt::CheckState state;
@@ -457,6 +470,12 @@ void RRcmp::displayAP(){
             ui->comboBox_iPtn1->addItem(partner[iPtn]);
         }
     }
+    int iPtn0max=ui->comboBox_iPtn0->maxCount();
+    if(iPtn0<=iPtn0max)
+        ui->comboBox_iPtn0->setCurrentIndex(iPtn0);
+    int iPtn1max=ui->comboBox_iPtn1->maxCount();
+    if(iPtn1<=iPtn1max)
+        ui->comboBox_iPtn1->setCurrentIndex(iPtn1);
     ui->lineEdit_min->setText(QString::number(range[iPar][5][0]));
     ui->lineEdit_max->setText(QString::number(range[iPar][5][1]));
     idealValue();
@@ -502,6 +521,69 @@ void RRcmp::plotMap(int iPtn){
     string namWin=nameW.toStdString();
     namedWindow(namWin, WINDOW_NORMAL);
     imshow(namWin,map);
+
+    //plot profile-graph
+    int nDatR=0,nDatL=0;
+    int j;
+    double xPlotR[Ni],xPlotL[Ni],yPlotR[Ni],yPlotL[Ni];
+    for(int i=iMin;i<=iMax;i++){
+        j=jP2;
+        if(S[j][i][iPar][iPtn][0]>0.5){
+            xPlotR[nDatR]=DS*(i-iP2);
+            yPlotR[nDatR]=S[j][i][iPar][iPtn][1];
+            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            nDatR++;
+        }
+        j=jP1;
+        if(S[j][i][iPar][iPtn][0]>0.5){
+            xPlotL[nDatL]=DS*(i-iP2);
+            yPlotL[nDatL]=S[j][i][iPar][iPtn][1];
+            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            nDatL++;
+        }
+    }
+    Qt::CheckState state;
+    state=idToCheckBox["checkBox_oPG_"+QString::number(iPtn)]->checkState();;
+    if( state == Qt::Unchecked )
+       iOpenG1=0;
+    if(iOpenG1==0){
+        G1=new QwtPlot();
+        iOpenG1=1;
+    }
+    else{
+        G1->detachItems(QwtPlotItem::Rtti_PlotCurve, true);
+    }
+    QwtPlotCurve *curve1=new QwtPlotCurve("curve1");
+    curve1->setSamples(xPlotR,yPlotR,nDatR);
+    curve1->setPen(QPen(Qt::green,2,Qt::SolidLine));
+    curve1->attach(G1);
+    QwtPlotCurve *curve2=new QwtPlotCurve("curve2");
+    curve2->setSamples(xPlotL,yPlotL,nDatL);
+    curve2->setPen(QPen(Qt::red,2,Qt::SolidLine));
+    curve2->attach(G1);
+    //draw vertical lines at the attaching points
+    double xP[2],yP[2];
+    xP[0]=0.;
+    xP[1]=0.;
+    yP[0]=range[iPar][5][0];
+    yP[1]=range[iPar][5][1];
+    QwtPlotCurve *curve3=new QwtPlotCurve("curve3");
+    curve3->setSamples(xP,yP,2);
+    curve3->setPen(QPen(Qt::black,1,Qt::DashLine));
+    curve3->attach(G1);
+    xP[0]=(iP3-iP2)*DS;
+    xP[1]=(iP3-iP2)*DS;
+    QwtPlotCurve *curve4=new QwtPlotCurve("curve4");
+    curve4->setSamples(xP,yP,2);
+    curve4->setPen(QPen(Qt::black,1,Qt::DashLine));
+    curve4->attach(G1);
+
+    G1-> setAxisTitle(0,param[iPar]);
+    G1-> setAxisTitle(2,"x (mm)");
+    G1-> setAxisScale(0,range[iPar][5][0],range[iPar][5][1],0);
+    G1-> setTitle(nameW);
+    G1-> setAutoReplot();
+    G1-> show();
 }
 
 void RRcmp::compare(){
@@ -537,16 +619,45 @@ void RRcmp::compare(){
     ui->lineEdit_PV->setText(QString::number(PV,'e',1));
     ui->lineEdit_diffMin->setText(QString::number(deltaMin,'e',1));
     ui->lineEdit_diffMax->setText(QString::number(deltaMax,'e',1));
+
+    //write the results in logfile
+    int iSpec=ui->comboBox_spec->currentIndex();
+    QString nameW="Diff_"+partner[iPtn1]+"_"+partner[iPtn0]+"_"+specim[iSpec]+"_"+param[iPar];
+    QFile fLog(dir+"/fLog.txt");
+    if (!fLog.open(QIODevice::WriteOnly | QIODevice::Append))
+        return;
+    QTextStream out(&fLog);
+    //out<<Mean<<"\t"<<standDev<<"\t"<<PV<<"\t"<<deltaMin<<"\t"<<deltaMax<<"\n";
+    out<<nameW.toStdString().c_str()<<"\t"<<Mean<<"\t"<<standDev<<"\t"<<PV<<"\t"<<deltaMin<<"\t"<<deltaMax<<"\n";
+    fLog.close();
+
     Qt::CheckState state;
     state=ui->checkBox_mapDiff->checkState();
-    if(state==Qt::Checked)
-        plotMapDiff(iPtn0,iPtn1,deltaMin,deltaMax);
+    if(state==Qt::Checked){
+        double MapMin,MapMax;
+        QString string;
+        string= ui->lineEdit_2DmapMin->text();
+        if(string==""){
+            MapMin=deltaMin;
+            ui->lineEdit_2DmapMin->setText(QString::number(deltaMin,'e',1));
+        }
+        else
+            MapMin=string.toDouble();
+        string= ui->lineEdit_2DmapMax->text();
+        if(string==""){
+            MapMax=deltaMax;
+            ui->lineEdit_2DmapMax->setText(QString::number(deltaMax,'e',1));
+        }
+        else
+            MapMax=string.toDouble();
+        plotMapDiff(iPtn0,iPtn1,MapMin,MapMax);
+    }
 }
 
 void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
     int iSpec=ui->comboBox_spec->currentIndex();
     int iPar=ui->comboBox_par->currentIndex();
-    printf("->plotMatDiff iPtn==%d iPtn1=%d iSpec=%d iPar=%d\n",iPtn0,iPtn1,iSpec,iPar);
+    printf("->plotMatDiff iPtn0==%d iPtn1=%d iSpec=%d iPar=%d\n",iPtn0,iPtn1,iSpec,iPar);
     Mat map(iMax-iMin+1,jMax-jMin+1,CV_8UC3,Scalar(150,150,150));
     double rng=deltaMax-deltaMin;
     double val;
@@ -560,10 +671,70 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
             }
         }
     }
-    QString nameW="Diff "+partner[iPtn0]+"&"+partner[iPtn1]+" "+specim[iSpec]+" "+param[iPar];
+    QString nameW="Diff "+partner[iPtn1]+"-"+partner[iPtn0]+" "+specim[iSpec]+" "+param[iPar];
     string namWin=nameW.toStdString();
     namedWindow(namWin, WINDOW_NORMAL);
     imshow(namWin,map);
+    //plot profile-graph
+    int nDatR=0,nDatL=0;
+    int j;
+    double xPlotR[Ni],xPlotL[Ni],yPlotR[Ni],yPlotL[Ni];
+    for(int i=iMin;i<=iMax;i++){
+        j=jP2;
+        if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
+            xPlotR[nDatR]=DS*(i-iP2);
+            yPlotR[nDatR]=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
+            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            nDatR++;
+        }
+        j=jP1;
+        if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
+            xPlotL[nDatL]=DS*(i-iP2);
+            yPlotL[nDatL]=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
+            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            nDatL++;
+        }
+    }
+    Qt::CheckState state=ui->checkBox_overW -> checkState();
+    if( state == Qt::Unchecked )
+        iOpenG1=0;
+    if(iOpenG1==0){
+        G1=new QwtPlot();
+        iOpenG1=1;
+    }
+    else{
+        G1->detachItems(QwtPlotItem::Rtti_PlotCurve, true);
+    }
+    QwtPlotCurve *curve1=new QwtPlotCurve("curve1");
+    curve1->setSamples(xPlotR,yPlotR,nDatR);
+    curve1->setPen(QPen(Qt::green,2,Qt::SolidLine));
+    curve1->attach(G1);
+    QwtPlotCurve *curve2=new QwtPlotCurve("curve2");
+    curve2->setSamples(xPlotL,yPlotL,nDatL);
+    curve2->setPen(QPen(Qt::red,2,Qt::SolidLine));
+    curve2->attach(G1);
+    //draw vertical lines at the attaching points
+    double xP[2],yP[2];
+    xP[0]=0.;
+    xP[1]=0.;
+    yP[0]=range[iPar][5][0];
+    yP[1]=range[iPar][5][1];
+    QwtPlotCurve *curve3=new QwtPlotCurve("curve3");
+    curve3->setSamples(xP,yP,2);
+    curve3->setPen(QPen(Qt::black,1,Qt::DashLine));
+    curve3->attach(G1);
+    xP[0]=(iP3-iP2)*DS;
+    xP[1]=(iP3-iP2)*DS;
+    QwtPlotCurve *curve4=new QwtPlotCurve("curve4");
+    curve4->setSamples(xP,yP,2);
+    curve4->setPen(QPen(Qt::black,1,Qt::DashLine));
+    curve4->attach(G1);
+    G1-> setAxisTitle(0,"Diff "+param[iPar]);
+    G1-> setAxisTitle(2,"x (mm)");
+    G1-> setAxisScale(0,deltaMin,deltaMax,0);
+    G1-> setTitle(nameW);
+    G1-> setAutoReplot();
+    G1-> show();
 }
 
 
