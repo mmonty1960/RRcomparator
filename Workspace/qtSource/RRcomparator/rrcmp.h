@@ -37,6 +37,7 @@ public Q_SLOTS:
     void plotMap(int iPtn);
     void plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax);
     void idealValue();
+    void checkRange();
 
 private:
     Ui::RRcmp *ui;

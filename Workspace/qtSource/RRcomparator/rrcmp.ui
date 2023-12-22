@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1157</width>
-    <height>617</height>
+    <width>1004</width>
+    <height>771</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>RRcmp</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
      <widget class="QLabel" name="label">
       <property name="font">
@@ -23,7 +23,7 @@
        </font>
       </property>
       <property name="text">
-       <string>RRcomparator v2.0</string>
+       <string>RRcomparator v3.0</string>
       </property>
      </widget>
     </item>
@@ -125,9 +125,58 @@
        </widget>
       </item>
       <item>
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_29">
+        <property name="text">
+         <string>Load file and </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBox_SWrealignment">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <item>
+         <property name="text">
+          <string>keep original</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SW realignment by devZ_ideal</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SW realignment by devZ_exp</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>common Min</string>
+         <string>common range: Min</string>
         </property>
        </widget>
       </item>
@@ -137,7 +186,7 @@
       <item>
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>common Max</string>
+         <string> Max</string>
         </property>
        </widget>
       </item>
@@ -145,7 +194,7 @@
        <widget class="QLineEdit" name="lineEdit_max"/>
       </item>
       <item>
-       <spacer name="horizontalSpacer_4">
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -160,19 +209,6 @@
      </layout>
     </item>
     <item>
-     <spacer name="verticalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>0</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
        <number>0</number>
@@ -184,33 +220,158 @@
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>P3</string>
+            </property>
+           </widget>
+          </item>
           <item row="4" column="4">
            <widget class="QLineEdit" name="lineEdit_DP4"/>
           </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="checkBox_1">
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="checkBox_0">
             <property name="text">
-             <string>FISE</string>
+             <string>ENEA</string>
             </property>
            </widget>
+          </item>
+          <item row="3" column="5">
+           <widget class="QLineEdit" name="lineEdit_Fmin"/>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLineEdit" name="lineEdit_FP3"/>
           </item>
           <item row="5" column="5">
            <widget class="QLineEdit" name="lineEdit_Nmin"/>
           </item>
-          <item row="5" column="2">
-           <widget class="QLineEdit" name="lineEdit_NP2"/>
+          <item row="3" column="6">
+           <widget class="QLineEdit" name="lineEdit_Fmax"/>
           </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="lineEdit_SP1"/>
+          <item row="5" column="6">
+           <widget class="QLineEdit" name="lineEdit_Nmax"/>
           </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_IP1"/>
+          <item row="5" column="7">
+           <widget class="QPushButton" name="pushButton_map_3">
+            <property name="text">
+             <string>plot</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QLineEdit" name="lineEdit_IP4"/>
+          </item>
+          <item row="0" column="6">
+           <widget class="QLabel" name="label_14">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLineEdit" name="lineEdit_SP2"/>
+          </item>
+          <item row="6" column="4">
+           <widget class="QLineEdit" name="lineEdit_SP4"/>
           </item>
           <item row="4" column="6">
            <widget class="QLineEdit" name="lineEdit_Dmax"/>
           </item>
+          <item row="5" column="4">
+           <widget class="QLineEdit" name="lineEdit_NP4"/>
+          </item>
+          <item row="2" column="5">
+           <widget class="QLineEdit" name="lineEdit_Emin"/>
+          </item>
           <item row="2" column="3">
            <widget class="QLineEdit" name="lineEdit_EP3"/>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="checkBox_3">
+            <property name="text">
+             <string>NREL</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="checkBox_2">
+            <property name="text">
+             <string>DLR</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLineEdit" name="lineEdit_EP4"/>
+          </item>
+          <item row="6" column="3">
+           <widget class="QLineEdit" name="lineEdit_SP3"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineEdit_EP1"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="lineEdit_SP1"/>
+          </item>
+          <item row="5" column="3">
+           <widget class="QLineEdit" name="lineEdit_NP3"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>P2</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="7">
+           <widget class="QPushButton" name="pushButton_map_2">
+            <property name="text">
+             <string>plot</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_IP1"/>
+          </item>
+          <item row="6" column="0">
+           <widget class="QCheckBox" name="checkBox_4">
+            <property name="text">
+             <string>SANDIA</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>P1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="5">
+           <widget class="QLineEdit" name="lineEdit_Smin"/>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="lineEdit_DP1"/>
+          </item>
+          <item row="3" column="7">
+           <widget class="QPushButton" name="pushButton_map_1">
+            <property name="text">
+             <string>plot</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="lineEdit_IP3"/>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLineEdit" name="lineEdit_NP2"/>
           </item>
           <item row="4" column="3">
            <widget class="QLineEdit" name="lineEdit_DP3"/>
@@ -222,106 +383,33 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_26">
-            <property name="text">
-             <string>Ideal</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="6">
-           <widget class="QLineEdit" name="lineEdit_Nmax"/>
-          </item>
-          <item row="3" column="2">
-           <widget class="QLineEdit" name="lineEdit_FP2"/>
-          </item>
-          <item row="5" column="8">
-           <widget class="QCheckBox" name="checkBox_oPG_3">
-            <property name="text">
-             <string>overwPG</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLineEdit" name="lineEdit_IP3"/>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="lineEdit_NP1"/>
-          </item>
-          <item row="7" column="8">
-           <widget class="QCheckBox" name="checkBox_oPG_4">
-            <property name="text">
-             <string>overwPG</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>P3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="7">
-           <widget class="QPushButton" name="pushButton_map_4">
-            <property name="text">
-             <string>plot</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="5">
-           <widget class="QLineEdit" name="lineEdit_Fmin"/>
-          </item>
-          <item row="7" column="6">
-           <widget class="QLineEdit" name="lineEdit_Smax"/>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLineEdit" name="lineEdit_IP2"/>
-          </item>
-          <item row="7" column="0">
-           <widget class="QCheckBox" name="checkBox_4">
-            <property name="text">
-             <string>SANDIA</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit_EP1"/>
-          </item>
-          <item row="3" column="4">
-           <widget class="QLineEdit" name="lineEdit_FP4"/>
-          </item>
           <item row="4" column="2">
            <widget class="QLineEdit" name="lineEdit_DP2"/>
           </item>
           <item row="3" column="1">
            <widget class="QLineEdit" name="lineEdit_FP1"/>
           </item>
-          <item row="0" column="7">
-           <spacer name="horizontalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
+          <item row="2" column="6">
+           <widget class="QLineEdit" name="lineEdit_Emax"/>
           </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="checkBox_0">
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="checkBox_1">
             <property name="text">
-             <string>ENEA</string>
+             <string>FISE</string>
             </property>
            </widget>
+          </item>
+          <item row="3" column="4">
+           <widget class="QLineEdit" name="lineEdit_FP4"/>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_IP2"/>
+          </item>
+          <item row="6" column="6">
+           <widget class="QLineEdit" name="lineEdit_Smax"/>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_FP2"/>
           </item>
           <item row="0" column="4">
            <widget class="QLabel" name="label_6">
@@ -330,146 +418,21 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="4">
-           <widget class="QLineEdit" name="lineEdit_SP4"/>
-          </item>
-          <item row="7" column="2">
-           <widget class="QLineEdit" name="lineEdit_SP2"/>
-          </item>
-          <item row="2" column="4">
-           <widget class="QLineEdit" name="lineEdit_EP4"/>
-          </item>
-          <item row="4" column="8">
-           <widget class="QCheckBox" name="checkBox_oPG_2">
-            <property name="text">
-             <string>overwPG</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="7">
-           <widget class="QPushButton" name="pushButton_map_3">
-            <property name="text">
-             <string>plot</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="5">
-           <widget class="QLineEdit" name="lineEdit_Smin"/>
-          </item>
-          <item row="7" column="3">
-           <widget class="QLineEdit" name="lineEdit_SP3"/>
-          </item>
-          <item row="4" column="0">
-           <widget class="QCheckBox" name="checkBox_2">
-            <property name="text">
-             <string>DLR</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="3">
-           <widget class="QLineEdit" name="lineEdit_NP3"/>
-          </item>
-          <item row="0" column="5">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>Min</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="checkBox_3">
-            <property name="text">
-             <string>NREL</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QLineEdit" name="lineEdit_FP3"/>
-          </item>
-          <item row="2" column="8">
-           <widget class="QCheckBox" name="checkBox_oPG_0">
-            <property name="text">
-             <string>overwPG</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QLineEdit" name="lineEdit_IP4"/>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>P2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="5">
-           <widget class="QLineEdit" name="lineEdit_Emin"/>
-          </item>
-          <item row="5" column="4">
-           <widget class="QLineEdit" name="lineEdit_NP4"/>
-          </item>
-          <item row="3" column="8">
-           <widget class="QCheckBox" name="checkBox_oPG_1">
-            <property name="text">
-             <string>overwPG</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>P1</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="2">
            <widget class="QLineEdit" name="lineEdit_EP2"/>
           </item>
-          <item row="3" column="7">
-           <widget class="QPushButton" name="pushButton_map_1">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_26">
             <property name="text">
-             <string>plot</string>
+             <string>Ideal</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="6">
-           <widget class="QLineEdit" name="lineEdit_Emax"/>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="lineEdit_NP1"/>
           </item>
-          <item row="3" column="6">
-           <widget class="QLineEdit" name="lineEdit_Fmax"/>
-          </item>
-          <item row="0" column="6">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>Max</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="7">
-           <widget class="QPushButton" name="pushButton_map_2">
+          <item row="6" column="7">
+           <widget class="QPushButton" name="pushButton_map_4">
             <property name="text">
              <string>plot</string>
             </property>
@@ -477,22 +440,6 @@
           </item>
           <item row="4" column="5">
            <widget class="QLineEdit" name="lineEdit_Dmin"/>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="lineEdit_DP1"/>
-          </item>
-          <item row="6" column="4">
-           <spacer name="verticalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </item>
@@ -648,127 +595,6 @@
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="pushButton_compare">
-        <property name="text">
-         <string>Compare</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="comboBox_iPtn0"/>
-      </item>
-      <item>
-       <widget class="QComboBox" name="comboBox_iPtn1"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>mean</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_mean"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>RMS</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_RMS"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>PV</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_PV"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_15">
-        <property name="text">
-         <string>min</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_diffMin"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>max</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_diffMax"/>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QCheckBox" name="checkBox_mapDiff">
-        <property name="text">
-         <string>2D map</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_27">
-        <property name="text">
-         <string>Min</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_2DmapMin"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_28">
-        <property name="text">
-         <string>Max</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_2DmapMax"/>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="checkBox_overW">
-        <property name="text">
-         <string>overwrite profile graph</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_6">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </item>
-    <item>
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -776,10 +602,134 @@
       <property name="sizeHint" stdset="0">
        <size>
         <width>20</width>
-        <height>106</height>
+        <height>1</height>
        </size>
       </property>
      </spacer>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Comparison</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QPushButton" name="pushButton_compare">
+           <property name="text">
+            <string>Compare</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_iPtn0"/>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_iPtn1"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>mean</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_mean"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>RMS</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_RMS"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>PV</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_PV"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>min</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_diffMin"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>max</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_diffMax"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QCheckBox" name="checkBox_mapDiff">
+           <property name="text">
+            <string>2D map &amp;&amp; profile plot</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_27">
+           <property name="text">
+            <string>Min</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_2DmapMin"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_28">
+           <property name="text">
+            <string>Max</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_2DmapMax"/>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </item>
    </layout>
   </widget>

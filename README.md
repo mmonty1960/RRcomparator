@@ -37,4 +37,4 @@ License:
 The code source files are distributed as open source software under the GNU General Public
 License as published by the Free Software Foundation version 3.
 
-![GUI_rrcmp](https://github.com/mmonty1960/RRcomparator/assets/86962852/3206951e-86bd-4082-97a8-d3ab3a6260ac)
+
