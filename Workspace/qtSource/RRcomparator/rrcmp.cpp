@@ -18,9 +18,9 @@ using namespace cv;
 const int Nj=181;
 const int Ni=171;
 const int Nptn=5;//N. partners
-const int Npar=6;//N. parameters
+const int Npar=6;//N. parameters + media
 //sampling matrix
-double S[Nj][Ni][Npar][Nptn][2];
+double S[Nj][Ni][Npar][Nptn+2][2];
 //      [j][i][0][k][m] = z (mm)
 //      [j][i][1][k][m] = dz/dx=Dx
 //      [j][i][2][k][m] = dz/dy=Dy
@@ -32,6 +32,8 @@ double S[Nj][Ni][Npar][Nptn][2];
 //      [j][i][l][2][m] -> DLR
 //      [j][i][l][3][m] -> NREL
 //      [j][i][l][4][m] -> SANDIA
+//      [j][i][l][5][m] -> mean
+//      [j][i][l][6][m] -> ideal
 //      [j][i][l][k][0] = N. of input data
 //      [j][i][l][k][1] = mean value
 //attaching points
@@ -44,9 +46,12 @@ int jP2=36;
 int iP3,jP1;
 int iMin=Ni,iMax=0,jMin=Nj,jMax=0;
 double DS=10.0;//cell step
-double range[Npar][Nptn+1][2];
+double range[Npar][Nptn+1][5];
 //          [iPar][iPtn][0] min
 //          [iPar][iPtn][1] max
+//          [iPar][iPtn][2] mean
+//          [iPar][iPtn][3] RMS
+//          [iPar][iPtn][4] Peak-Valley
 double vP2[3],vP4[3];//ideal values at the attaching points P2 and P4
 //        [0] z
 //        [1] Dx
@@ -54,12 +59,13 @@ double vP2[3],vP4[3];//ideal values at the attaching points P2 and P4
 double Vservice[3];
 
 QString dir;
-QString partner[Nptn]={"ENEA","FISE","DLR","NREL","SANDIA"};
+QString partner[Nptn+2]={"ENEA","FISE","DLR","NREL","SANDIA","Mean","Ideal"};
 QString partnerChar[Nptn]={"E","F","D","N","S"};
 QString param[Npar]={"z","Dx","Dy","devZ","devDx","devDy"};
 QString specim[6]={"inner#60","inner#61","inner#62","outer#93","outer#97","outer#99"};
 
 QwtPlot *G1;
+int nOpenGraph=0;//number of plots
 
 //invoked functions
 int NINT(double x);
@@ -74,7 +80,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 3.0 22 December 2023\n\n");
+    printf("         version 4.0 8 January 2024\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -89,6 +95,7 @@ RRcmp::RRcmp(QWidget *parent)
     connect(ui->checkBox_2, SIGNAL(stateChanged(int)),this,SLOT(loadDLR()));
     connect(ui->checkBox_3, SIGNAL(stateChanged(int)),this,SLOT(loadNREL()));
     connect(ui->checkBox_4, SIGNAL(stateChanged(int)),this,SLOT(loadSANDIA()));
+    connect(ui->checkBox_showDiff, SIGNAL(stateChanged(int)),this,SLOT(displayAP()));
     connect(ui->comboBox_SWrealignment, SIGNAL(currentIndexChanged(int)),this,SLOT(loadAll()));
     connect(ui->comboBox_spec, SIGNAL(currentIndexChanged(int)),this,SLOT(loadAll()));
     connect(ui->comboBox_par, SIGNAL(currentIndexChanged(int)),this,SLOT(displayAP()));
@@ -152,6 +159,36 @@ RRcmp::RRcmp(QWidget *parent)
     idToLineEdit["lineEdit_DyMax"]=ui->lineEdit_DyMax;
     idToLineEdit["lineEdit_NyMax"]=ui->lineEdit_NyMax;
     idToLineEdit["lineEdit_SyMax"]=ui->lineEdit_SyMax;
+
+    idToLineEdit["lineEdit_E_Mean"]=ui->lineEdit_E_Mean;
+    idToLineEdit["lineEdit_F_Mean"]=ui->lineEdit_F_Mean;
+    idToLineEdit["lineEdit_D_Mean"]=ui->lineEdit_D_Mean;
+    idToLineEdit["lineEdit_N_Mean"]=ui->lineEdit_N_Mean;
+    idToLineEdit["lineEdit_S_Mean"]=ui->lineEdit_S_Mean;
+
+    idToLineEdit["lineEdit_E_RMS"]=ui->lineEdit_E_RMS;
+    idToLineEdit["lineEdit_F_RMS"]=ui->lineEdit_F_RMS;
+    idToLineEdit["lineEdit_D_RMS"]=ui->lineEdit_D_RMS;
+    idToLineEdit["lineEdit_N_RMS"]=ui->lineEdit_N_RMS;
+    idToLineEdit["lineEdit_S_RMS"]=ui->lineEdit_S_RMS;
+
+    idToLineEdit["lineEdit_E_PV"]=ui->lineEdit_E_PV;
+    idToLineEdit["lineEdit_F_PV"]=ui->lineEdit_F_PV;
+    idToLineEdit["lineEdit_D_PV"]=ui->lineEdit_D_PV;
+    idToLineEdit["lineEdit_N_PV"]=ui->lineEdit_N_PV;
+    idToLineEdit["lineEdit_S_PV"]=ui->lineEdit_S_PV;
+
+    idToLineEdit["lineEdit_E_Min"]=ui->lineEdit_E_Min;
+    idToLineEdit["lineEdit_F_Min"]=ui->lineEdit_F_Min;
+    idToLineEdit["lineEdit_D_Min"]=ui->lineEdit_D_Min;
+    idToLineEdit["lineEdit_N_Min"]=ui->lineEdit_N_Min;
+    idToLineEdit["lineEdit_S_Min"]=ui->lineEdit_S_Min;
+
+    idToLineEdit["lineEdit_E_Max"]=ui->lineEdit_E_Max;
+    idToLineEdit["lineEdit_F_Max"]=ui->lineEdit_F_Max;
+    idToLineEdit["lineEdit_D_Max"]=ui->lineEdit_D_Max;
+    idToLineEdit["lineEdit_N_Max"]=ui->lineEdit_N_Max;
+    idToLineEdit["lineEdit_S_Max"]=ui->lineEdit_S_Max;
 
     idToCheckBox["checkBox_0"]=ui->checkBox_0;
     idToCheckBox["checkBox_1"]=ui->checkBox_1;
@@ -265,6 +302,7 @@ void RRcmp::loadData(int iPtn){
     QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
         printf("file %s non trovato!!!\n",fileName.toStdString().c_str());
+        idToCheckBox["checkBox_"+QString::number(iPtn)]->setCheckState(Qt::Unchecked);
         return;
     }
     //S matrix initialization for iPtn
@@ -286,6 +324,8 @@ void RRcmp::loadData(int iPtn){
         line=stream.readLine();
         line=line.simplified();
         if(line.contains("nan"))
+            continue;
+        if(line.contains("mm"))
             continue;
         List =line.split(" ");
         int nV=List.count();
@@ -322,6 +362,8 @@ void RRcmp::loadData(int iPtn){
             for(int iP=0;iP<Npar;iP++){
                 if(S[j][i][iP][iPtn][0]>0.5){
                     S[j][i][iP][iPtn][1]=S[j][i][iP][iPtn][1]/S[j][i][iP][iPtn][0];
+                    if(iPtn==1 && iP==1)
+                        S[j][i][iP][iPtn][1]=tan(S[j][i][iP][iPtn][1]);//FISE stored theta(rad)
                 }
             }
         }
@@ -408,7 +450,6 @@ void RRcmp::checkRange(){
     iMax=0;
     jMin=Nj;
     jMax=0;
-    int iPar=ui->comboBox_par->currentIndex();
     Qt::CheckState state;
     for(int iPtn=0;iPtn<5;iPtn++){
         state=idToCheckBox["checkBox_"+QString::number(iPtn)]->checkState();
@@ -416,6 +457,9 @@ void RRcmp::checkRange(){
             for(int iP=0;iP<Npar;iP++){
                 range[iP][iPtn][0]=1.e+06;
                 range[iP][iPtn][1]=-1.e+06;
+                range[iP][iPtn][2]=0.;
+                range[iP][iPtn][3]=0.;
+                range[iP][iPtn][4]=0.;
             }
             //S matrix normalization to Ndata per cell
             int Imin=Ni,Imax=0,Jmin=Nj,Jmax=0;
@@ -435,24 +479,61 @@ void RRcmp::checkRange(){
                             range[iP][iPtn][1]=max(range[iP][iPtn][1],S[j][i][iP][iPtn][1]);
                             range[iP][5][0]=min(range[iP][5][0],range[iP][iPtn][0]);
                             range[iP][5][1]=max(range[iP][5][1],range[iP][iPtn][1]);
+                            range[iP][iPtn][2]=range[iP][iPtn][2]+S[j][i][iP][iPtn][1];
+                            range[iP][iPtn][3]=range[iP][iPtn][3]+S[j][i][iP][iPtn][1]*S[j][i][iP][iPtn][1];
+                            range[iP][iPtn][4]++;
                         }
                     }
                 }
             }
-            printf("Imin=%d Imax=%d -> Xmin=%f Xmax=%f\n",Imin,Imax,double(Imin-iP2)*DS,double(Imax-iP2)*DS);
-            printf("Jmin=%d Jmax=%d -> Ymin=%f Ymax=%f\n",Jmin,Jmax,double(Jmin-jP2)*DS,double(Jmax-jP2)*DS);
+            //printf("Imin=%d Imax=%d -> Xmin=%f Xmax=%f\n",Imin,Imax,double(Imin-iP2)*DS,double(Imax-iP2)*DS);
+            //printf("Jmin=%d Jmax=%d -> Ymin=%f Ymax=%f\n",Jmin,Jmax,double(Jmin-jP2)*DS,double(Jmax-jP2)*DS);
             idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMin"]->setText(QString::number(double(Imin-iP2)*DS,'f',1));
             idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMax"]->setText(QString::number(double(Imax-iP2)*DS,'f',1));
             idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMin"]->setText(QString::number(double(Jmin-jP2)*DS,'f',1));
             idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMax"]->setText(QString::number(double(Jmax-jP2)*DS,'f',1));
-            for(int iP=0;iP<Npar;iP++)
-                printf("range[%d][%d][0]=%f range[%d][%d][1]=%f\n",iP,iPtn,range[iP][iPtn][0],iP,iPtn,range[iP][iPtn][1]);
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"min"]->setText(QString::number(range[iPar][iPtn][0],'e',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"max"]->setText(QString::number(range[iPar][iPtn][1],'e',3));
+            for(int iP=0;iP<Npar;iP++){
+                //printf("range[%d][%d][0]=%f range[%d][%d][1]=%f\n",iP,iPtn,range[iP][iPtn][0],iP,iPtn,range[iP][iPtn][1]);
+                range[iP][iPtn][2]=range[iP][iPtn][2]/range[iP][iPtn][4];
+                range[iP][iPtn][3]=sqrt(range[iP][iPtn][3]/range[iP][iPtn][4]);
+                range[iP][iPtn][4]=range[iP][iPtn][1]-range[iP][iPtn][0];
+            }
         }
     }
-    ui->lineEdit_min->setText(QString::number(range[iPar][5][0],'e',3));
-    ui->lineEdit_max->setText(QString::number(range[iPar][5][1],'e',3));
+    //mean computing
+    //S matrix initialization
+    for(int i=0;i<Ni;i++){
+        for(int j=0;j<Nj;j++){
+            for(int iP=0;iP<Npar;iP++){
+                S[j][i][iP][5][0]=0.;
+                S[j][i][iP][5][1]=0.;
+            }
+        }
+    }
+    //mean
+    for(int i=0;i<Ni;i++){
+        for(int j=0;j<Nj;j++){
+            for(int iPtn=0;iPtn<5;iPtn++){
+                state=idToCheckBox["checkBox_"+QString::number(iPtn)]->checkState();
+                if(state==Qt::Checked && S[j][i][0][iPtn][0]>0.5){
+                    for(int iP=0;iP<Npar;iP++){
+                        S[j][i][iP][5][0]++;
+                        S[j][i][iP][5][1]=S[j][i][iP][5][1]+S[j][i][iP][iPtn][1];
+                    }
+                }
+            }
+        }
+    }
+    //Normalization
+    for(int i=0;i<Ni;i++){
+        for(int j=0;j<Nj;j++){
+            for(int iP=0;iP<Npar;iP++){
+                if(S[j][i][iP][5][0]>0.5){
+                    S[j][i][iP][5][1]=S[j][i][iP][5][1]/S[j][i][iP][5][0];
+                }
+            }
+        }
+    }
     displayAP();
 }
 
@@ -460,9 +541,9 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
     printf("->idealValue\n");
     int iSpec=ui->comboBox_spec->currentIndex();
     double DELTAy=996.0;
-    double DELTAx=982-1.4;//inner
+    double DELTAx=982.0-1.4;//inner
     if(iSpec>2)
-        DELTAx=871-1.4;//outer
+        DELTAx=871.0-1.4;//outer
     iP3=iP2+NINT(DELTAx/DS);
     jP1=jP2+NINT(DELTAy/DS);
     double focal=1710.;// focal lenght
@@ -480,7 +561,7 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
     double x,xsi1,eta1,A,B,C,xsi,eta,xP,zP,Dx;
     for(int iAP=0;iAP<2;iAP++){
         if(iAP==0)
-            x=0;//P2 abscissa in LabRF
+            x=0.;//P2 abscissa in LabRF
         else
             x=DELTAx;//P4 abscissa in LabRF
         xsi1=xsiP2+x*cos(theta);
@@ -509,14 +590,38 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
     printf("P2=(%f, %f)\n",(iP2-iP2)*DS,(jP2-jP2)*DS);
     printf("P3=(%f, %f)\n",(iP3-iP2)*DS,(jP1-jP2)*DS);
     printf("P4=(%f, %f)\n",(iP3-iP2)*DS,(jP2-jP2)*DS);
+    //ideal parabola
+    //A=0.25/focal;
+    //B=1./tan(theta);
+    for(int i=0;i<Ni;i++){
+        x=(i-iP2)*DS;
+        xsi1=xsiP2+x*cos(theta);
+        eta1=etaP2+x*sin(theta);
+        C=-eta1-xsi1/tan(theta);
+        xsi=(-B+sqrt(B*B-4.*A*C))/(2.*A);
+        eta=0.25/focal*xsi*xsi;
+        //xP=(xsi-xsiP2)*cos(theta)+(eta-etaP2)*sin(theta);
+        zP=-(xsi-xsiP2)*sin(theta)+(eta-etaP2)*cos(theta);
+        Dx=tan(atan(0.5/focal*xsi)-theta);
+        for(int j=0;j<Nj;j++){
+            S[j][i][0][6][0]=1.;
+            S[j][i][0][6][1]=zP;
+            S[j][i][1][6][0]=1.;
+            S[j][i][1][6][1]=Dx;
+            for(int iPar=2;iPar<=5;iPar++){
+                S[j][i][iPar][6][0]=1.;
+                S[j][i][iPar][6][1]=0.;
+            }
+        }
+    }
 }
 
 
 void RRcmp::displayAP(){
     int iPar=ui->comboBox_par->currentIndex();
     printf("->displayAP for iPar=%d\n",iPar);
-    int iPtn0=ui->comboBox_iPtn0->currentIndex();
-    int iPtn1=ui->comboBox_iPtn1->currentIndex();
+    QString Ptn0=ui->comboBox_iPtn0->currentText();
+    QString Ptn1=ui->comboBox_iPtn1->currentText();
     ui->comboBox_iPtn0->clear();
     ui->comboBox_iPtn1->clear();
     int iSWr=ui->comboBox_SWrealignment->currentIndex() ;
@@ -527,11 +632,16 @@ void RRcmp::displayAP(){
         offsetP3=vP4[iPar];
         offsetP4=vP4[iPar];
     }
-    ui->lineEdit_IP1->setText(QString::number(offsetP2,'e',3));
-    ui->lineEdit_IP2->setText(QString::number(offsetP2,'e',3));
-    ui->lineEdit_IP3->setText(QString::number(offsetP4,'e',3));
-    ui->lineEdit_IP4->setText(QString::number(offsetP4,'e',3));
+    ui->lineEdit_IP1->setText(QString::number(offsetP2,'f',4));
+    ui->lineEdit_IP2->setText(QString::number(offsetP2,'f',4));
+    ui->lineEdit_IP3->setText(QString::number(offsetP4,'f',4));
+    ui->lineEdit_IP4->setText(QString::number(offsetP4,'f',4));
     Qt::CheckState state;
+    state=ui->checkBox_showDiff->checkState();
+    int iShowDiff=0;
+    if(state==Qt::Checked)
+        iShowDiff=1;
+    int iMaxIdx=-1;
     for(int iPtn=0;iPtn<Nptn;iPtn++){
         state=idToCheckBox["checkBox_"+QString::number(iPtn)]->checkState();
         if(state==Qt::Checked){
@@ -541,23 +651,52 @@ void RRcmp::displayAP(){
                 offsetP3=S[jP1][iP3][3][iPtn][1];
                 offsetP4=S[jP2][iP3][3][iPtn][1];
             }
-            printf("offsetP1=%f offsetP2=%f offsetP3=%f offsetP4=%f\n",offsetP1,offsetP3,offsetP3,offsetP4);
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P1"]->setText(QString::number(S[jP1][iP2][iPar][iPtn][1]-offsetP1,'e',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P2"]->setText(QString::number(S[jP2][iP2][iPar][iPtn][1]-offsetP2,'e',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P3"]->setText(QString::number(S[jP1][iP3][iPar][iPtn][1]-offsetP3,'e',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P4"]->setText(QString::number(S[jP2][iP3][iPar][iPtn][1]-offsetP4,'e',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"min"]->setText(QString::number(range[iPar][iPtn][0],'e',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"max"]->setText(QString::number(range[iPar][iPtn][1],'e',3));
+            //printf("offsetP1=%f offsetP2=%f offsetP3=%f offsetP4=%f\n",offsetP1,offsetP3,offsetP3,offsetP4);
+            if(iShowDiff==0){
+                offsetP1=0.0;
+                offsetP2=0.0;
+                offsetP3=0.0;
+                offsetP4=0.0;
+            }
+            printf("%f\t%f\n%f\t%f\n",S[jP1][iP2][iPar][iPtn][1]-offsetP1,S[jP1][iP3][iPar][iPtn][1]-offsetP3,
+                                      S[jP2][iP2][iPar][iPtn][1]-offsetP2,S[jP2][iP3][iPar][iPtn][1]-offsetP4);
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P1"]->setText(QString::number(S[jP1][iP2][iPar][iPtn][1]-offsetP1,'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P2"]->setText(QString::number(S[jP2][iP2][iPar][iPtn][1]-offsetP2,'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P3"]->setText(QString::number(S[jP1][iP3][iPar][iPtn][1]-offsetP3,'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P4"]->setText(QString::number(S[jP2][iP3][iPar][iPtn][1]-offsetP4,'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"min"]->setText(QString::number(range[iPar][iPtn][0],'f',3));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"max"]->setText(QString::number(range[iPar][iPtn][1],'f',3));
+            //statistics
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Mean"]->setText(QString::number(range[iPar][iPtn][2],'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_RMS"]->setText(QString::number(range[iPar][iPtn][3],'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_PV"]->setText(QString::number(range[iPar][iPtn][4],'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Min"]->setText(QString::number(range[iPar][iPtn][0],'f',4));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Max"]->setText(QString::number(range[iPar][iPtn][1],'f',4));
+
             ui->comboBox_iPtn0->addItem(partner[iPtn]);
             ui->comboBox_iPtn1->addItem(partner[iPtn]);
+            iMaxIdx++;
         }
     }
-    int iPtn0max=ui->comboBox_iPtn0->maxCount();
-    if(iPtn0<=iPtn0max)
-        ui->comboBox_iPtn0->setCurrentIndex(iPtn0);
-    int iPtn1max=ui->comboBox_iPtn1->maxCount();
-    if(iPtn1<=iPtn1max)
-        ui->comboBox_iPtn1->setCurrentIndex(iPtn1);
+    //restore partners to be compared
+    if(iMaxIdx>=0){
+        ui->comboBox_iPtn0->addItem(partner[5]);//Mean option
+        ui->comboBox_iPtn1->addItem(partner[5]);
+        iMaxIdx++;
+        ui->comboBox_iPtn0->addItem(partner[6]);//Ideal parabola option
+        ui->comboBox_iPtn1->addItem(partner[6]);
+        iMaxIdx++;
+        int iCix=-1;
+        do{
+            iCix++;
+        }while(Ptn0!=partner[iCix] && iCix<iMaxIdx);
+        ui->comboBox_iPtn0->setCurrentIndex(iCix);
+        iCix=-1;
+        do{
+            iCix++;
+        }while(Ptn1!=partner[iCix] && iCix<iMaxIdx);
+        ui->comboBox_iPtn1->setCurrentIndex(iCix);
+    }
     ui->lineEdit_min->setText(QString::number(range[iPar][5][0]));
     ui->lineEdit_max->setText(QString::number(range[iPar][5][1]));
 }
@@ -601,8 +740,10 @@ void RRcmp::plotMap(int iPtn){
     QString nameW=partner[iPtn]+" "+specim[iSpec]+" "+param[iPar];
     string namWin=nameW.toStdString();
     namedWindow(namWin, WINDOW_NORMAL);
+    moveWindow(namWin,90+nOpenGraph*5,90+nOpenGraph*5);
     imshow(namWin,map);
     map.release();
+    nOpenGraph++;
 
     //plot profile-graph
     int nDatR=0,nDatL=0;
@@ -626,6 +767,7 @@ void RRcmp::plotMap(int iPtn){
     }
 
     G1=new QwtPlot();
+    G1->setGeometry(90+nOpenGraph*5,90+nOpenGraph*5,500,300);
     QwtPlotCurve *curve1=new QwtPlotCurve("curve1");
     curve1->setSamples(xPlotR,yPlotR,nDatR);
     curve1->setPen(QPen(Qt::green,2,Qt::SolidLine));
@@ -668,14 +810,29 @@ void RRcmp::plotMap(int iPtn){
     G1-> setTitle(nameW);
     G1-> setAutoReplot();
     G1-> show();
+    nOpenGraph++;
+    if(nOpenGraph>50)
+        nOpenGraph=0;
 }
 
 void RRcmp::compare(){
     int iPar=ui->comboBox_par->currentIndex();
-    int iPtn0=ui->comboBox_iPtn0->currentIndex();
-    int iPtn1=ui->comboBox_iPtn1->currentIndex();
+    QString Ptn0=ui->comboBox_iPtn0->currentText();
+    QString Ptn1=ui->comboBox_iPtn1->currentText();
+    int iPtn0=0,iPtn1=0;
+    if(!Ptn0.isEmpty()){
+        while(Ptn0!=partner[iPtn0]){
+            iPtn0++;
+        }
+    }
+    if(!Ptn1.isEmpty()){
+        while(Ptn1!=partner[iPtn1]){
+            iPtn1++;
+        }
+    }
     if(iPtn0==iPtn1)
         return;
+    printf("->compare iPtn0=%d iPtn1=%d\n",iPtn0,iPtn1);
     int ndat=0;
     double Sx=0.,Sxx=0.,delta,PV,deltaMin=1.e+06,deltaMax=-1.e+06;
     for(int i=0;i<Ni;i++){
@@ -692,17 +849,12 @@ void RRcmp::compare(){
     }
     PV=deltaMax-deltaMin;
     double Mean=Sx/ndat;
-    double standDev=Sxx/ndat-Mean*Mean;
-    ui->lineEdit_mean->setText(QString::number(Mean,'e',2));
-    if(standDev>0.){
-        standDev=sqrt(standDev);
-        ui->lineEdit_RMS->setText(QString::number(standDev,'e',2));
-    }
-    else
-        ui->lineEdit_RMS->setText("NAN");
-    ui->lineEdit_PV->setText(QString::number(PV,'e',1));
-    ui->lineEdit_diffMin->setText(QString::number(deltaMin,'e',1));
-    ui->lineEdit_diffMax->setText(QString::number(deltaMax,'e',1));
+    double RMS=sqrt(Sxx/ndat);
+    ui->lineEdit_mean->setText(QString::number(Mean,'f',4));
+    ui->lineEdit_RMS->setText(QString::number(RMS,'f',4));
+    ui->lineEdit_PV->setText(QString::number(PV,'f',4));
+    ui->lineEdit_diffMin->setText(QString::number(deltaMin,'f',4));
+    ui->lineEdit_diffMax->setText(QString::number(deltaMax,'f',4));
 
     //write the results in logfile
     int iSpec=ui->comboBox_spec->currentIndex();
@@ -712,7 +864,7 @@ void RRcmp::compare(){
         return;
     QTextStream out(&fLog);
     //out<<Mean<<"\t"<<standDev<<"\t"<<PV<<"\t"<<deltaMin<<"\t"<<deltaMax<<"\n";
-    out<<nameW.toStdString().c_str()<<"\t"<<Mean<<"\t"<<standDev<<"\t"<<PV<<"\t"<<deltaMin<<"\t"<<deltaMax<<"\n";
+    out<<nameW.toStdString().c_str()<<"\t"<<Mean<<"\t"<<RMS<<"\t"<<PV<<"\t"<<deltaMin<<"\t"<<deltaMax<<"\n";
     fLog.close();
 
     Qt::CheckState state;
@@ -723,14 +875,14 @@ void RRcmp::compare(){
         string= ui->lineEdit_2DmapMin->text();
         if(string==""){
             MapMin=deltaMin;
-            ui->lineEdit_2DmapMin->setText(QString::number(deltaMin,'e',1));
+            ui->lineEdit_2DmapMin->setText(QString::number(deltaMin,'f',4));
         }
         else
             MapMin=string.toDouble();
         string= ui->lineEdit_2DmapMax->text();
         if(string==""){
             MapMax=deltaMax;
-            ui->lineEdit_2DmapMax->setText(QString::number(deltaMax,'e',1));
+            ui->lineEdit_2DmapMax->setText(QString::number(deltaMax,'f',4));
         }
         else
             MapMax=string.toDouble();
@@ -758,8 +910,11 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
     QString nameW="Diff "+partner[iPtn1]+"-"+partner[iPtn0]+" "+specim[iSpec]+" "+param[iPar];
     string namWin=nameW.toStdString();
     namedWindow(namWin, WINDOW_NORMAL);
+    moveWindow(namWin,90+nOpenGraph*5,90+nOpenGraph*5);
     imshow(namWin,map);
     map.release();
+    nOpenGraph++;
+
     //plot profile-graph
     int nDatR=0,nDatL=0;
     int j;
@@ -781,6 +936,7 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
         }
     }
     G1=new QwtPlot();
+    G1->setGeometry(90+nOpenGraph*5,90+nOpenGraph*5,500,300);
     QwtPlotCurve *curve1=new QwtPlotCurve("curve1");
     curve1->setSamples(xPlotR,yPlotR,nDatR);
     curve1->setPen(QPen(Qt::green,2,Qt::SolidLine));
@@ -822,6 +978,9 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
     G1-> setTitle(nameW);
     G1-> setAutoReplot();
     G1-> show();
+    nOpenGraph++;
+    if(nOpenGraph>50)
+        nOpenGraph=0;
 }
 
 
