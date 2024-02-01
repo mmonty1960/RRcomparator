@@ -80,7 +80,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 4.0 8 January 2024\n\n");
+    printf("         version 6.0 26 January 2024\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -99,6 +99,8 @@ RRcmp::RRcmp(QWidget *parent)
     connect(ui->comboBox_SWrealignment, SIGNAL(currentIndexChanged(int)),this,SLOT(loadAll()));
     connect(ui->comboBox_spec, SIGNAL(currentIndexChanged(int)),this,SLOT(loadAll()));
     connect(ui->comboBox_par, SIGNAL(currentIndexChanged(int)),this,SLOT(displayAP()));
+    connect(ui->spinBox_decimal,SIGNAL(valueChanged(int)),this,SLOT(displayAP()));
+    connect(ui->checkBox_mrad,SIGNAL(stateChanged(int)),this,SLOT(displayAP()));
     connect(ui->pushButton_compare, SIGNAL(pressed()),this,SLOT(compare()));
     connect(ui->pushButton_map_0, SIGNAL(pressed()),this,SLOT(map0()));
     connect(ui->pushButton_map_1, SIGNAL(pressed()),this,SLOT(map1()));
@@ -341,6 +343,10 @@ void RRcmp::loadData(int iPtn){
         y=pezzo.toDouble();
         int i=NINT(x/DS)+iP2;
         int j=NINT(y/DS)+jP2;
+        if(i<0 || j<0 || i>=Ni || j>=Nj){
+            printf("Error: i=%d j=%d %s\n",i,j,line.toStdString().c_str());
+            continue;
+        }
         for(int iv=2;iv<nV;iv++){
             pezzo=List.at(iv).toLocal8Bit().constData();
             val=pezzo.toDouble();
@@ -355,6 +361,7 @@ void RRcmp::loadData(int iPtn){
         range[iP][iPtn][1]=-1.e+06;
     }
     printf("done!\n");
+    fflush(stdout);
     //S matrix normalization to Ndata per cell
     //int Imin=Ni,Imax=0,Jmin=Nj,Jmax=0;
     for(int i=0;i<Ni;i++){
@@ -362,8 +369,12 @@ void RRcmp::loadData(int iPtn){
             for(int iP=0;iP<Npar;iP++){
                 if(S[j][i][iP][iPtn][0]>0.5){
                     S[j][i][iP][iPtn][1]=S[j][i][iP][iPtn][1]/S[j][i][iP][iPtn][0];
-                    if(iPtn==1 && iP==1)
-                        S[j][i][iP][iPtn][1]=tan(S[j][i][iP][iPtn][1]);//FISE stored theta(rad)
+                    if(iPtn==1){
+                        if(iP==1)
+                            S[j][i][iP][iPtn][1]=tan(S[j][i][iP][iPtn][1]);//FISE stored theta(rad)
+                        else if(iP==4)
+                            S[j][i][iP][iPtn][1]=tan(atan(S[j][i][1][iPtn][1])+S[j][i][iP][iPtn][1])-S[j][i][1][iPtn][1];
+                    }
                 }
             }
         }
@@ -619,9 +630,11 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
 
 void RRcmp::displayAP(){
     int iPar=ui->comboBox_par->currentIndex();
+    int iDec=ui->spinBox_decimal->value();
     printf("->displayAP for iPar=%d\n",iPar);
     QString Ptn0=ui->comboBox_iPtn0->currentText();
     QString Ptn1=ui->comboBox_iPtn1->currentText();
+    printf("Ptn0=%s Ptn1=%s\n",Ptn0.toStdString().c_str(),Ptn1.toStdString().c_str());
     ui->comboBox_iPtn0->clear();
     ui->comboBox_iPtn1->clear();
     int iSWr=ui->comboBox_SWrealignment->currentIndex() ;
@@ -632,11 +645,15 @@ void RRcmp::displayAP(){
         offsetP3=vP4[iPar];
         offsetP4=vP4[iPar];
     }
-    ui->lineEdit_IP1->setText(QString::number(offsetP2,'f',4));
-    ui->lineEdit_IP2->setText(QString::number(offsetP2,'f',4));
-    ui->lineEdit_IP3->setText(QString::number(offsetP4,'f',4));
-    ui->lineEdit_IP4->setText(QString::number(offsetP4,'f',4));
+    ui->lineEdit_IP1->setText(QString::number(offsetP2,'f',iDec));
+    ui->lineEdit_IP2->setText(QString::number(offsetP2,'f',iDec));
+    ui->lineEdit_IP3->setText(QString::number(offsetP4,'f',iDec));
+    ui->lineEdit_IP4->setText(QString::number(offsetP4,'f',iDec));
     Qt::CheckState state;
+    state=ui->checkBox_mrad->checkState();
+    double fact=1.;
+    if(state==Qt::Checked)
+        fact=1000.;
     state=ui->checkBox_showDiff->checkState();
     int iShowDiff=0;
     if(state==Qt::Checked)
@@ -660,19 +677,20 @@ void RRcmp::displayAP(){
             }
             printf("%f\t%f\n%f\t%f\n",S[jP1][iP2][iPar][iPtn][1]-offsetP1,S[jP1][iP3][iPar][iPtn][1]-offsetP3,
                                       S[jP2][iP2][iPar][iPtn][1]-offsetP2,S[jP2][iP3][iPar][iPtn][1]-offsetP4);
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P1"]->setText(QString::number(S[jP1][iP2][iPar][iPtn][1]-offsetP1,'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P2"]->setText(QString::number(S[jP2][iP2][iPar][iPtn][1]-offsetP2,'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P3"]->setText(QString::number(S[jP1][iP3][iPar][iPtn][1]-offsetP3,'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P4"]->setText(QString::number(S[jP2][iP3][iPar][iPtn][1]-offsetP4,'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"min"]->setText(QString::number(range[iPar][iPtn][0],'f',3));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"max"]->setText(QString::number(range[iPar][iPtn][1],'f',3));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P1"]->setText(QString::number((S[jP1][iP2][iPar][iPtn][1]-offsetP1)*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P2"]->setText(QString::number((S[jP2][iP2][iPar][iPtn][1]-offsetP2)*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P3"]->setText(QString::number((S[jP1][iP3][iPar][iPtn][1]-offsetP3)*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P4"]->setText(QString::number((S[jP2][iP3][iPar][iPtn][1]-offsetP4)*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"min"]->setText(QString::number((range[iPar][iPtn][0])*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"max"]->setText(QString::number((range[iPar][iPtn][1])*fact,'f',iDec));
             //statistics
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Mean"]->setText(QString::number(range[iPar][iPtn][2],'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_RMS"]->setText(QString::number(range[iPar][iPtn][3],'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_PV"]->setText(QString::number(range[iPar][iPtn][4],'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Min"]->setText(QString::number(range[iPar][iPtn][0],'f',4));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Max"]->setText(QString::number(range[iPar][iPtn][1],'f',4));
-
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Mean"]->setText(QString::number((range[iPar][iPtn][2])*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_RMS"]->setText(QString::number((range[iPar][iPtn][3])*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_PV"]->setText(QString::number((range[iPar][iPtn][4])*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Min"]->setText(QString::number((range[iPar][iPtn][0])*fact,'f',iDec));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Max"]->setText(QString::number((range[iPar][iPtn][1])*fact,'f',iDec));
+            printf("stat: %f %f %f %f %f\n",
+                   range[iPar][iPtn][2],range[iPar][iPtn][3],range[iPar][iPtn][4],range[iPar][iPtn][0],range[iPar][iPtn][1]);
             ui->comboBox_iPtn0->addItem(partner[iPtn]);
             ui->comboBox_iPtn1->addItem(partner[iPtn]);
             iMaxIdx++;
@@ -687,15 +705,18 @@ void RRcmp::displayAP(){
         ui->comboBox_iPtn1->addItem(partner[6]);
         iMaxIdx++;
         int iCix=-1;
+        QString Ptn0new,Ptn1new;
         do{
             iCix++;
-        }while(Ptn0!=partner[iCix] && iCix<iMaxIdx);
-        ui->comboBox_iPtn0->setCurrentIndex(iCix);
+            ui->comboBox_iPtn0->setCurrentIndex(iCix);
+            Ptn0new=ui->comboBox_iPtn0->currentText();
+        }while(Ptn0new!=Ptn0 && iCix<iMaxIdx);
         iCix=-1;
         do{
             iCix++;
-        }while(Ptn1!=partner[iCix] && iCix<iMaxIdx);
-        ui->comboBox_iPtn1->setCurrentIndex(iCix);
+            ui->comboBox_iPtn1->setCurrentIndex(iCix);
+            Ptn1new=ui->comboBox_iPtn1->currentText();
+        }while(Ptn1new!=Ptn1 && iCix<iMaxIdx);
     }
     ui->lineEdit_min->setText(QString::number(range[iPar][5][0]));
     ui->lineEdit_max->setText(QString::number(range[iPar][5][1]));
@@ -817,6 +838,7 @@ void RRcmp::plotMap(int iPtn){
 
 void RRcmp::compare(){
     int iPar=ui->comboBox_par->currentIndex();
+    int iDec=ui->spinBox_decimal->value();
     QString Ptn0=ui->comboBox_iPtn0->currentText();
     QString Ptn1=ui->comboBox_iPtn1->currentText();
     int iPtn0=0,iPtn1=0;
@@ -850,11 +872,16 @@ void RRcmp::compare(){
     PV=deltaMax-deltaMin;
     double Mean=Sx/ndat;
     double RMS=sqrt(Sxx/ndat);
-    ui->lineEdit_mean->setText(QString::number(Mean,'f',4));
-    ui->lineEdit_RMS->setText(QString::number(RMS,'f',4));
-    ui->lineEdit_PV->setText(QString::number(PV,'f',4));
-    ui->lineEdit_diffMin->setText(QString::number(deltaMin,'f',4));
-    ui->lineEdit_diffMax->setText(QString::number(deltaMax,'f',4));
+    Qt::CheckState state0;
+    state0=ui->checkBox_mrad->checkState();
+    double fact=1.;
+    if(state0==Qt::Checked)
+        fact=1000.;
+    ui->lineEdit_mean->setText(QString::number(Mean*fact,'f',iDec));
+    ui->lineEdit_RMS->setText(QString::number(RMS*fact,'f',iDec));
+    ui->lineEdit_PV->setText(QString::number(PV*fact,'f',iDec));
+    ui->lineEdit_diffMin->setText(QString::number(deltaMin*fact,'f',iDec));
+    ui->lineEdit_diffMax->setText(QString::number(deltaMax*fact,'f',iDec));
 
     //write the results in logfile
     int iSpec=ui->comboBox_spec->currentIndex();
@@ -875,14 +902,14 @@ void RRcmp::compare(){
         string= ui->lineEdit_2DmapMin->text();
         if(string==""){
             MapMin=deltaMin;
-            ui->lineEdit_2DmapMin->setText(QString::number(deltaMin,'f',4));
+            ui->lineEdit_2DmapMin->setText(QString::number(deltaMin*fact,'f',iDec));
         }
         else
             MapMin=string.toDouble();
         string= ui->lineEdit_2DmapMax->text();
         if(string==""){
             MapMax=deltaMax;
-            ui->lineEdit_2DmapMax->setText(QString::number(deltaMax,'f',4));
+            ui->lineEdit_2DmapMax->setText(QString::number(deltaMax*fact,'f',iDec));
         }
         else
             MapMax=string.toDouble();

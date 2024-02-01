@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1071</width>
-    <height>512</height>
+    <width>1067</width>
+    <height>529</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
        </font>
       </property>
       <property name="text">
-       <string>RRcomparator v4.0</string>
+       <string>RRcomparator v5.0</string>
       </property>
      </widget>
     </item>
@@ -205,6 +205,30 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_40">
+        <property name="text">
+         <string>decimal</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinBox_decimal">
+        <property name="maximum">
+         <number>10</number>
+        </property>
+        <property name="value">
+         <number>4</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBox_mrad">
+        <property name="text">
+         <string>*10^3</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
