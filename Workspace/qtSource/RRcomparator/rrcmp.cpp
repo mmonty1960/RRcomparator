@@ -80,7 +80,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 6.0 26 January 2024\n\n");
+    printf("         version 6.0 6 February 2024\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -369,9 +369,9 @@ void RRcmp::loadData(int iPtn){
             for(int iP=0;iP<Npar;iP++){
                 if(S[j][i][iP][iPtn][0]>0.5){
                     S[j][i][iP][iPtn][1]=S[j][i][iP][iPtn][1]/S[j][i][iP][iPtn][0];
-                    if(iPtn==1){
+                    if(iPtn==1 || iPtn==2){
                         if(iP==1)
-                            S[j][i][iP][iPtn][1]=tan(S[j][i][iP][iPtn][1]);//FISE stored theta(rad)
+                            S[j][i][iP][iPtn][1]=tan(S[j][i][iP][iPtn][1]);//FISE & DLR consider theta(rad) and not tan(theta)
                         else if(iP==4)
                             S[j][i][iP][iPtn][1]=tan(atan(S[j][i][1][iPtn][1])+S[j][i][iP][iPtn][1])-S[j][i][1][iPtn][1];
                     }

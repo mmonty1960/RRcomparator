@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1067</width>
-    <height>529</height>
+    <height>706</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
        </font>
       </property>
       <property name="text">
-       <string>RRcomparator v5.0</string>
+       <string>RRcomparator v6.0</string>
       </property>
      </widget>
     </item>
