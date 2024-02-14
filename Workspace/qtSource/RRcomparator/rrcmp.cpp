@@ -36,6 +36,8 @@ double S[Nj][Ni][Npar][Nptn+2][2];
 //      [j][i][l][6][m] -> ideal
 //      [j][i][l][k][0] = N. of input data
 //      [j][i][l][k][1] = mean value
+int Nloaded=0;
+
 //attaching points
 //  P3         P4
 //             ^ x
@@ -80,7 +82,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 6.0 6 February 2024\n\n");
+    printf("         version 7.0 14 February 2024\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -101,6 +103,7 @@ RRcmp::RRcmp(QWidget *parent)
     connect(ui->comboBox_par, SIGNAL(currentIndexChanged(int)),this,SLOT(displayAP()));
     connect(ui->spinBox_decimal,SIGNAL(valueChanged(int)),this,SLOT(displayAP()));
     connect(ui->checkBox_mrad,SIGNAL(stateChanged(int)),this,SLOT(displayAP()));
+    connect(ui->checkBox_limComXY,SIGNAL(stateChanged(int)),this,SLOT(checkRange()));
     connect(ui->pushButton_compare, SIGNAL(pressed()),this,SLOT(compare()));
     connect(ui->pushButton_map_0, SIGNAL(pressed()),this,SLOT(map0()));
     connect(ui->pushButton_map_1, SIGNAL(pressed()),this,SLOT(map1()));
@@ -252,8 +255,10 @@ void RRcmp::loadAll(){
 
 void RRcmp::loadENEA(){
     Qt::CheckState state=ui->checkBox_0 -> checkState();
-    if( state != Qt::Checked )
+    if( state != Qt::Checked ){
+        checkRange();
         return;
+    }
     idealValue();
     loadData(0);
     checkRange();
@@ -261,8 +266,10 @@ void RRcmp::loadENEA(){
 
 void RRcmp::loadFISE(){
     Qt::CheckState state=ui->checkBox_1 -> checkState();
-    if( state != Qt::Checked )
+    if( state != Qt::Checked ){
+        checkRange();
         return;
+    }
     idealValue();
     loadData(1);
     checkRange();
@@ -270,8 +277,10 @@ void RRcmp::loadFISE(){
 
 void RRcmp::loadDLR(){
     Qt::CheckState state=ui->checkBox_2 -> checkState();
-    if( state != Qt::Checked )
+    if( state != Qt::Checked ){
+        checkRange();
         return;
+    }
     idealValue();
     loadData(2);
     checkRange();
@@ -279,8 +288,10 @@ void RRcmp::loadDLR(){
 
 void RRcmp::loadNREL(){
     Qt::CheckState state=ui->checkBox_3 -> checkState();
-    if( state != Qt::Checked )
+    if( state != Qt::Checked ){
+        checkRange();
         return;
+    }
     idealValue();
     loadData(3);
     checkRange();
@@ -288,8 +299,10 @@ void RRcmp::loadNREL(){
 
 void RRcmp::loadSANDIA(){
     Qt::CheckState state=ui->checkBox_4 -> checkState();
-    if( state != Qt::Checked )
+    if( state != Qt::Checked ){
+        checkRange();
         return;
+    }
     idealValue();
     loadData(4);
     checkRange();
@@ -434,6 +447,7 @@ void RRcmp::loadData(int iPtn){
     }
     QTextStream out(&file2);
     QString sep;
+    out<<"x(mm) y(mm) z(mm) tan(thetaX) tan(thetaY) devZ(mm) devTanX devzTanY"<<"\n";
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
             if(S[j][i][0][iPtn][0]>0.5){
@@ -455,63 +469,16 @@ void RRcmp::loadData(int iPtn){
 
 
 void RRcmp::checkRange(){
-    printf("->checkRange\n");
-    //reset S limits
-    iMin=Ni;
-    iMax=0;
-    jMin=Nj;
-    jMax=0;
+    printf("->checkRange with computing mean surface\n");
     Qt::CheckState state;
+    //mean surface computing
+    Nloaded=0;
     for(int iPtn=0;iPtn<5;iPtn++){
         state=idToCheckBox["checkBox_"+QString::number(iPtn)]->checkState();
-        if(state==Qt::Checked){
-            for(int iP=0;iP<Npar;iP++){
-                range[iP][iPtn][0]=1.e+06;
-                range[iP][iPtn][1]=-1.e+06;
-                range[iP][iPtn][2]=0.;
-                range[iP][iPtn][3]=0.;
-                range[iP][iPtn][4]=0.;
-            }
-            //S matrix normalization to Ndata per cell
-            int Imin=Ni,Imax=0,Jmin=Nj,Jmax=0;
-            for(int i=0;i<Ni;i++){
-                for(int j=0;j<Nj;j++){
-                    for(int iP=0;iP<Npar;iP++){
-                        if(S[j][i][iP][iPtn][0]>0.5){
-                            iMin=min(iMin,i);
-                            iMax=max(iMax,i);
-                            jMin=min(jMin,j);
-                            jMax=max(iMax,j);
-                            Imin=min(Imin,i);
-                            Imax=max(Imax,i);
-                            Jmin=min(Jmin,j);
-                            Jmax=max(Jmax,j);
-                            range[iP][iPtn][0]=min(range[iP][iPtn][0],S[j][i][iP][iPtn][1]);
-                            range[iP][iPtn][1]=max(range[iP][iPtn][1],S[j][i][iP][iPtn][1]);
-                            range[iP][5][0]=min(range[iP][5][0],range[iP][iPtn][0]);
-                            range[iP][5][1]=max(range[iP][5][1],range[iP][iPtn][1]);
-                            range[iP][iPtn][2]=range[iP][iPtn][2]+S[j][i][iP][iPtn][1];
-                            range[iP][iPtn][3]=range[iP][iPtn][3]+S[j][i][iP][iPtn][1]*S[j][i][iP][iPtn][1];
-                            range[iP][iPtn][4]++;
-                        }
-                    }
-                }
-            }
-            //printf("Imin=%d Imax=%d -> Xmin=%f Xmax=%f\n",Imin,Imax,double(Imin-iP2)*DS,double(Imax-iP2)*DS);
-            //printf("Jmin=%d Jmax=%d -> Ymin=%f Ymax=%f\n",Jmin,Jmax,double(Jmin-jP2)*DS,double(Jmax-jP2)*DS);
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMin"]->setText(QString::number(double(Imin-iP2)*DS,'f',1));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMax"]->setText(QString::number(double(Imax-iP2)*DS,'f',1));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMin"]->setText(QString::number(double(Jmin-jP2)*DS,'f',1));
-            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMax"]->setText(QString::number(double(Jmax-jP2)*DS,'f',1));
-            for(int iP=0;iP<Npar;iP++){
-                //printf("range[%d][%d][0]=%f range[%d][%d][1]=%f\n",iP,iPtn,range[iP][iPtn][0],iP,iPtn,range[iP][iPtn][1]);
-                range[iP][iPtn][2]=range[iP][iPtn][2]/range[iP][iPtn][4];
-                range[iP][iPtn][3]=sqrt(range[iP][iPtn][3]/range[iP][iPtn][4]);
-                range[iP][iPtn][4]=range[iP][iPtn][1]-range[iP][iPtn][0];
-            }
-        }
+        if(state==Qt::Checked)
+            Nloaded++;
     }
-    //mean computing
+    printf("\tmean-surface computed on %d participants\n",Nloaded);
     //S matrix initialization
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
@@ -545,6 +512,65 @@ void RRcmp::checkRange(){
             }
         }
     }
+    //reset S limits
+    iMin=Ni;
+    iMax=0;
+    jMin=Nj;
+    jMax=0;
+    state=ui->checkBox_limComXY->checkState();
+    int iComXY=0;
+    if(state==Qt::Checked)
+        iComXY=1;
+    for(int iPtn=0;iPtn<5;iPtn++){
+        state=idToCheckBox["checkBox_"+QString::number(iPtn)]->checkState();
+        if(state==Qt::Checked){
+            for(int iP=0;iP<Npar;iP++){
+                range[iP][iPtn][0]=1.e+06; //Min
+                range[iP][iPtn][1]=-1.e+06;//Max
+                range[iP][iPtn][2]=0.;     //here used as SUMx
+                range[iP][iPtn][3]=0.;     //here used as SUMxx
+                range[iP][iPtn][4]=0.;     //here used as Ndata counter
+            }
+            //statistical analysis
+            int Imin=Ni,Imax=0,Jmin=Nj,Jmax=0;
+            for(int i=0;i<Ni;i++){
+                for(int j=0;j<Nj;j++){
+                    for(int iP=0;iP<Npar;iP++){
+                        if((iComXY==0 && S[j][i][iP][iPtn][0]>0.5) || (iComXY==1 && S[j][i][iP][5][0]==Nloaded)){
+                            iMin=min(iMin,i);
+                            iMax=max(iMax,i);
+                            jMin=min(jMin,j);
+                            jMax=max(iMax,j);
+                            Imin=min(Imin,i);
+                            Imax=max(Imax,i);
+                            Jmin=min(Jmin,j);
+                            Jmax=max(Jmax,j);
+                            range[iP][iPtn][0]=min(range[iP][iPtn][0],S[j][i][iP][iPtn][1]);
+                            range[iP][iPtn][1]=max(range[iP][iPtn][1],S[j][i][iP][iPtn][1]);
+                            range[iP][5][0]=min(range[iP][5][0],range[iP][iPtn][0]);
+                            range[iP][5][1]=max(range[iP][5][1],range[iP][iPtn][1]);
+                            range[iP][iPtn][2]=range[iP][iPtn][2]+S[j][i][iP][iPtn][1];
+                            range[iP][iPtn][3]=range[iP][iPtn][3]+S[j][i][iP][iPtn][1]*S[j][i][iP][iPtn][1];
+                            range[iP][iPtn][4]++;
+                        }
+                    }
+                }
+            }
+            //printf("Imin=%d Imax=%d -> Xmin=%f Xmax=%f\n",Imin,Imax,double(Imin-iP2)*DS,double(Imax-iP2)*DS);
+            //printf("Jmin=%d Jmax=%d -> Ymin=%f Ymax=%f\n",Jmin,Jmax,double(Jmin-jP2)*DS,double(Jmax-jP2)*DS);
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMin"]->setText(QString::number(double(Imin-iP2)*DS,'f',1));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMax"]->setText(QString::number(double(Imax-iP2)*DS,'f',1));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMin"]->setText(QString::number(double(Jmin-jP2)*DS,'f',1));
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMax"]->setText(QString::number(double(Jmax-jP2)*DS,'f',1));
+            for(int iP=0;iP<Npar;iP++){
+                //printf("range[%d][%d][0]=%f range[%d][%d][1]=%f\n",iP,iPtn,range[iP][iPtn][0],iP,iPtn,range[iP][iPtn][1]);
+                range[iP][iPtn][2]=range[iP][iPtn][2]/range[iP][iPtn][4];      //mean
+                range[iP][iPtn][3]=sqrt(range[iP][iPtn][3]/range[iP][iPtn][4]);//RMS
+                range[iP][iPtn][4]=range[iP][iPtn][1]-range[iP][iPtn][0];      //Peak-Valley
+            }
+        }
+    }
+
     displayAP();
 }
 
@@ -659,6 +685,7 @@ void RRcmp::displayAP(){
     if(state==Qt::Checked)
         iShowDiff=1;
     int iMaxIdx=-1;
+    double sx=0.,sxx=0.;
     for(int iPtn=0;iPtn<Nptn;iPtn++){
         state=idToCheckBox["checkBox_"+QString::number(iPtn)]->checkState();
         if(state==Qt::Checked){
@@ -693,7 +720,23 @@ void RRcmp::displayAP(){
                    range[iPar][iPtn][2],range[iPar][iPtn][3],range[iPar][iPtn][4],range[iPar][iPtn][0],range[iPar][iPtn][1]);
             ui->comboBox_iPtn0->addItem(partner[iPtn]);
             ui->comboBox_iPtn1->addItem(partner[iPtn]);
+            sx=sx+range[iPar][iPtn][3];
+            sxx=sxx+range[iPar][iPtn][3]*range[iPar][iPtn][3];
             iMaxIdx++;
+        }
+        else{
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P1"] ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P2"] ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P3"] ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"P4"] ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"min"]->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"max"]->setText("");
+            //statistics
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Mean"]->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_RMS"] ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_PV"]  ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Min"] ->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"_Max"] ->setText("");
         }
     }
     //restore partners to be compared
@@ -720,6 +763,9 @@ void RRcmp::displayAP(){
     }
     ui->lineEdit_min->setText(QString::number(range[iPar][5][0]));
     ui->lineEdit_max->setText(QString::number(range[iPar][5][1]));
+    sx=sx/double(Nloaded);
+    sxx=sxx/double(Nloaded);
+    ui->lineEdit_meanRMS->setText(QString::number(sx*fact,'f',iDec)+"+-"+QString::number(sqrt(sxx-sx*sx)*fact,'f',iDec));//RMS mean and std
 }
 
 void RRcmp::map0(){
@@ -855,11 +901,19 @@ void RRcmp::compare(){
     if(iPtn0==iPtn1)
         return;
     printf("->compare iPtn0=%d iPtn1=%d\n",iPtn0,iPtn1);
+    Qt::CheckState state;
+    state=ui->checkBox_limComXY->checkState();
+    int iComXY=0;
+    if(state==Qt::Checked)
+        iComXY=1;
+    if(iPtn0!=5 && iPtn1!=5)
+        iComXY=0;
     int ndat=0;
     double Sx=0.,Sxx=0.,delta,PV,deltaMin=1.e+06,deltaMax=-1.e+06;
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
-            if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
+            if((iComXY==0 && S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5) ||
+                (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
                 delta=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
                 deltaMin=min(deltaMin,delta);
                 deltaMax=max(deltaMax,delta);
@@ -894,7 +948,6 @@ void RRcmp::compare(){
     out<<nameW.toStdString().c_str()<<"\t"<<Mean<<"\t"<<RMS<<"\t"<<PV<<"\t"<<deltaMin<<"\t"<<deltaMax<<"\n";
     fLog.close();
 
-    Qt::CheckState state;
     state=ui->checkBox_mapDiff->checkState();
     if(state==Qt::Checked){
         double MapMin,MapMax;
@@ -921,12 +974,20 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
     int iSpec=ui->comboBox_spec->currentIndex();
     int iPar=ui->comboBox_par->currentIndex();
     printf("->plotMatDiff iPtn0==%d iPtn1=%d iSpec=%d iPar=%d\n",iPtn0,iPtn1,iSpec,iPar);
+    Qt::CheckState state;
+    state=ui->checkBox_limComXY->checkState();
+    int iComXY=0;
+    if(state==Qt::Checked)
+        iComXY=1;
+    if(iPtn0!=5 && iPtn1!=5)
+        iComXY=0;
     Mat map(iMax-iMin+1,jMax-jMin+1,CV_8UC3,Scalar(150,150,150));
     double rng=deltaMax-deltaMin;
     double val;
     for(int i=iMin;i<=iMax;i++){
         for(int j=jMin;j<=jMax;j++){
-            if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
+            if((iComXY==0 && S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5) ||
+                (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
                 val=((S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])-deltaMin)/rng;
                 pxColor(val);
                 for(int k=0;k<3;k++)

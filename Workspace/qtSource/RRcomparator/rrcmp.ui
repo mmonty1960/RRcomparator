@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1067</width>
-    <height>706</height>
+    <height>747</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
        </font>
       </property>
       <property name="text">
-       <string>RRcomparator v6.0</string>
+       <string>RRcomparator v7.0</string>
       </property>
      </widget>
     </item>
@@ -219,7 +219,7 @@
          <number>10</number>
         </property>
         <property name="value">
-         <number>4</number>
+         <number>2</number>
         </property>
        </widget>
       </item>
@@ -643,15 +643,50 @@
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="lineEdit_S_Mean"/>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_38">
+          <item row="0" column="5">
+           <widget class="QLabel" name="label_39">
             <property name="text">
-             <string>SANDIA</string>
+             <string>Max</string>
             </property>
            </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLineEdit" name="lineEdit_F_PV"/>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLineEdit" name="lineEdit_S_RMS"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_31">
+            <property name="text">
+             <string>RMS</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="5">
+           <widget class="QLineEdit" name="lineEdit_S_Max"/>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="lineEdit_E_PV"/>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_D_RMS"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_30">
+            <property name="text">
+             <string>Mean</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="4">
+           <widget class="QLineEdit" name="lineEdit_S_Min"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineEdit_F_Mean"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="lineEdit_D_Mean"/>
           </item>
           <item row="0" column="3">
            <widget class="QLabel" name="label_32">
@@ -660,41 +695,31 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
-           <widget class="QLineEdit" name="lineEdit_E_RMS"/>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_34">
+            <property name="text">
+             <string>ENEA</string>
+            </property>
+           </widget>
           </item>
-          <item row="4" column="2">
-           <widget class="QLineEdit" name="lineEdit_N_RMS"/>
+          <item row="3" column="3">
+           <widget class="QLineEdit" name="lineEdit_D_PV"/>
           </item>
-          <item row="5" column="3">
-           <widget class="QLineEdit" name="lineEdit_S_PV"/>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>SANDIA</string>
+            </property>
+           </widget>
           </item>
-          <item row="2" column="2">
-           <widget class="QLineEdit" name="lineEdit_F_RMS"/>
-          </item>
-          <item row="2" column="4">
-           <widget class="QLineEdit" name="lineEdit_F_Min"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_E_Mean"/>
-          </item>
-          <item row="5" column="2">
-           <widget class="QLineEdit" name="lineEdit_S_RMS"/>
-          </item>
-          <item row="2" column="3">
-           <widget class="QLineEdit" name="lineEdit_F_PV"/>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLineEdit" name="lineEdit_E_PV"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit_F_Mean"/>
+          <item row="1" column="5">
+           <widget class="QLineEdit" name="lineEdit_E_Max"/>
           </item>
           <item row="4" column="3">
            <widget class="QLineEdit" name="lineEdit_N_PV"/>
           </item>
-          <item row="4" column="4">
-           <widget class="QLineEdit" name="lineEdit_N_Min"/>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_E_Mean"/>
           </item>
           <item row="4" column="0">
            <widget class="QLabel" name="label_37">
@@ -703,8 +728,35 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="4">
-           <widget class="QLineEdit" name="lineEdit_S_Min"/>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="lineEdit_N_Mean"/>
+          </item>
+          <item row="1" column="4">
+           <widget class="QLineEdit" name="lineEdit_E_Min"/>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="lineEdit_N_RMS"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_36">
+            <property name="text">
+             <string>DLR</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="label_33">
+            <property name="text">
+             <string>Min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_35">
+            <property name="text">
+             <string>FISE</string>
+            </property>
+           </widget>
           </item>
           <item row="0" column="0">
            <spacer name="horizontalSpacer_7">
@@ -719,87 +771,38 @@
             </property>
            </spacer>
           </item>
-          <item row="0" column="4">
-           <widget class="QLabel" name="label_33">
-            <property name="text">
-             <string>Min</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_30">
-            <property name="text">
-             <string>Mean</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QLineEdit" name="lineEdit_D_RMS"/>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="lineEdit_N_Mean"/>
-          </item>
-          <item row="3" column="3">
-           <widget class="QLineEdit" name="lineEdit_D_PV"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_35">
-            <property name="text">
-             <string>FISE</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="4">
-           <widget class="QLineEdit" name="lineEdit_D_Min"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_34">
-            <property name="text">
-             <string>ENEA</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_36">
-            <property name="text">
-             <string>DLR</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QLineEdit" name="lineEdit_E_Min"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="lineEdit_D_Mean"/>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_31">
-            <property name="text">
-             <string>RMS</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="5">
-           <widget class="QLabel" name="label_39">
-            <property name="text">
-             <string>Max</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="5">
-           <widget class="QLineEdit" name="lineEdit_E_Max"/>
-          </item>
-          <item row="2" column="5">
-           <widget class="QLineEdit" name="lineEdit_F_Max"/>
+          <item row="4" column="4">
+           <widget class="QLineEdit" name="lineEdit_N_Min"/>
           </item>
           <item row="3" column="5">
            <widget class="QLineEdit" name="lineEdit_D_Max"/>
           </item>
+          <item row="3" column="4">
+           <widget class="QLineEdit" name="lineEdit_D_Min"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="lineEdit_S_Mean"/>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="lineEdit_F_RMS"/>
+          </item>
+          <item row="2" column="5">
+           <widget class="QLineEdit" name="lineEdit_F_Max"/>
+          </item>
           <item row="4" column="5">
            <widget class="QLineEdit" name="lineEdit_N_Max"/>
           </item>
-          <item row="5" column="5">
-           <widget class="QLineEdit" name="lineEdit_S_Max"/>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_E_RMS"/>
+          </item>
+          <item row="5" column="3">
+           <widget class="QLineEdit" name="lineEdit_S_PV"/>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLineEdit" name="lineEdit_F_Min"/>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLineEdit" name="lineEdit_meanRMS"/>
           </item>
          </layout>
         </item>
@@ -832,6 +835,13 @@
        </size>
       </property>
      </spacer>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="checkBox_limComXY">
+      <property name="text">
+       <string>Limited to the common XY area</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QGroupBox" name="groupBox">
