@@ -82,7 +82,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 7.0 14 February 2024\n\n");
+    printf("         version 8.0 19 February 2024\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -426,7 +426,7 @@ void RRcmp::loadData(int iPtn){
                     mx=(dZT-dZB)/(iP3-iP2)/DS;
                     //corZ=dZR+my*(j-jP2)*DS;
                     corZ=dZB+mx*(i-iP2)*DS;
-                    //printf("i=%d j=%d mx=%f my=%f corZ=%f\n",i,j,mx,my,corZ);
+                    //printf("i=%d j=%d mx=%f my=%f corZx=%f corZy=%f\n",i,j,mx,my,corZ,dZR+my*(j-jP2)*DS);
                     S[j][i][0][iPtn][1]=S[j][i][0][iPtn][1]-corZ;
                     S[j][i][1][iPtn][1]=tan(atan(S[j][i][1][iPtn][1])-atan(mx));
                     S[j][i][2][iPtn][1]=tan(atan(S[j][i][2][iPtn][1])-atan(my));
@@ -600,7 +600,8 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
         if(iAP==0)
             x=0.;//P2 abscissa in LabRF
         else
-            x=DELTAx;//P4 abscissa in LabRF
+            //x=DELTAx;//P4 abscissa in LabRF
+            x=(iP3-iP2)*DS;//value round in the cell
         xsi1=xsiP2+x*cos(theta);
         eta1=etaP2+x*sin(theta);
         A=0.25/focal;
@@ -788,6 +789,10 @@ void RRcmp::map4(){
 void RRcmp::plotMap(int iPtn){
     int iSpec=ui->comboBox_spec->currentIndex();
     int iPar=ui->comboBox_par->currentIndex();
+    Qt::CheckState state=ui->checkBox_limComXY->checkState();
+    int iComXY=0;
+    if(state==Qt::Checked)
+        iComXY=1;
     printf("->plotMat iPtn=%d iSpec=%d iPar=%d\n",iPtn,iSpec,iPar);
     Mat map(iMax-iMin+1,jMax-jMin+1,CV_8UC3,Scalar(150,150,150));
     range[iPar][5][0]=ui->lineEdit_min->text().toDouble();
@@ -796,7 +801,7 @@ void RRcmp::plotMap(int iPtn){
     double val;
     for(int i=iMin;i<=iMax;i++){
         for(int j=jMin;j<=jMax;j++){
-            if(S[j][i][iPar][iPtn][0]>0.5){
+            if((iComXY==0 && S[j][i][iPar][iPtn][0]>0.5) || (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
                 val=(S[j][i][iPar][iPtn][1]-range[iPar][5][0])/rng;
                 pxColor(val);
                 for(int k=0;k<3;k++)
@@ -818,17 +823,19 @@ void RRcmp::plotMap(int iPtn){
     double xPlotR[Ni],xPlotL[Ni],yPlotR[Ni],yPlotL[Ni];
     for(int i=iMin;i<=iMax;i++){
         j=jP2;
-        if(S[j][i][iPar][iPtn][0]>0.5){
+        if((iComXY==0 && S[j][i][iPar][iPtn][0]>0.5) || (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
             xPlotR[nDatR]=DS*(i-iP2);
             yPlotR[nDatR]=S[j][i][iPar][iPtn][1];
-            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            if(i==iP3)
+             printf("nDat=%d xPlot=%f yPlot=%f\n",nDatR,xPlotR[nDatR],yPlotR[nDatR]);
             nDatR++;
         }
         j=jP1;
-        if(S[j][i][iPar][iPtn][0]>0.5){
+        if((iComXY==0 && S[j][i][iPar][iPtn][0]>0.5) || (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
             xPlotL[nDatL]=DS*(i-iP2);
             yPlotL[nDatL]=S[j][i][iPar][iPtn][1];
-            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            if(i==iP3)
+             printf("nDat=%d xPlot=%f yPlot=%f\n",nDatL,xPlotL[nDatL],yPlotL[nDatL]);
             nDatL++;
         }
     }
@@ -900,7 +907,6 @@ void RRcmp::compare(){
     }
     if(iPtn0==iPtn1)
         return;
-    printf("->compare iPtn0=%d iPtn1=%d\n",iPtn0,iPtn1);
     Qt::CheckState state;
     state=ui->checkBox_limComXY->checkState();
     int iComXY=0;
@@ -908,6 +914,7 @@ void RRcmp::compare(){
         iComXY=1;
     if(iPtn0!=5 && iPtn1!=5)
         iComXY=0;
+    printf("->compare iPtn0=%d iPtn1=%d with iComXY=%d Nloaded=%d\n",iPtn0,iPtn1,iComXY,Nloaded);
     int ndat=0;
     double Sx=0.,Sxx=0.,delta,PV,deltaMin=1.e+06,deltaMax=-1.e+06;
     for(int i=0;i<Ni;i++){
@@ -936,6 +943,7 @@ void RRcmp::compare(){
     ui->lineEdit_PV->setText(QString::number(PV*fact,'f',iDec));
     ui->lineEdit_diffMin->setText(QString::number(deltaMin*fact,'f',iDec));
     ui->lineEdit_diffMax->setText(QString::number(deltaMax*fact,'f',iDec));
+    ui->lineEdit_Ndat->setText(QString::number(ndat));
 
     //write the results in logfile
     int iSpec=ui->comboBox_spec->currentIndex();
@@ -1012,14 +1020,16 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
         if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
             xPlotR[nDatR]=DS*(i-iP2);
             yPlotR[nDatR]=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
-            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            if(i==iP3)
+             printf("nDat=%d xPlot=%f yPlot=%f valPtn1=%f valPtn0=%f\n",nDatR,xPlotR[nDatR],yPlotR[nDatR],S[j][i][iPar][iPtn1][1],S[j][i][iPar][iPtn0][1]);
             nDatR++;
         }
         j=jP1;
         if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
             xPlotL[nDatL]=DS*(i-iP2);
             yPlotL[nDatL]=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
-            //printf("nDat=%d xPlot=%f yPlot=%f\n",nDat,xPlot[nDat],yPlot[nDat]);
+            if(i==iP3)
+             printf("nDat=%d xPlot=%f yPlot=%f valPtn1=%f valPtn0=%f\n",nDatL,xPlotL[nDatL],yPlotL[nDatL],S[j][i][iPar][iPtn1][1],S[j][i][iPar][iPtn0][1]);
             nDatL++;
         }
     }

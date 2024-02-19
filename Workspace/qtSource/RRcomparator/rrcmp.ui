@@ -23,7 +23,7 @@
        </font>
       </property>
       <property name="text">
-       <string>RRcomparator v7.0</string>
+       <string>RRcomparator v8.0</string>
       </property>
      </widget>
     </item>
@@ -961,6 +961,16 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_41">
+           <property name="text">
+            <string>Ndat</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_Ndat"/>
          </item>
         </layout>
        </item>
