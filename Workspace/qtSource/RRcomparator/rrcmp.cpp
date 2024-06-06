@@ -20,7 +20,7 @@ const int Ni=171;
 const int Nptn=5;//N. partners
 const int Npar=6;//N. parameters + media
 //sampling matrix
-double S[Nj][Ni][Npar][Nptn+2][2];
+double S[Nj][Ni][Npar][Nptn+3][2];
 //      [j][i][0][k][m] = z (mm)
 //      [j][i][1][k][m] = dz/dx=Dx
 //      [j][i][2][k][m] = dz/dy=Dy
@@ -34,6 +34,7 @@ double S[Nj][Ni][Npar][Nptn+2][2];
 //      [j][i][l][4][m] -> SANDIA
 //      [j][i][l][5][m] -> mean
 //      [j][i][l][6][m] -> ideal
+//      [j][i][l][7][m] -> standard deviation
 //      [j][i][l][k][0] = N. of input data
 //      [j][i][l][k][1] = mean value
 int Nloaded=0;
@@ -59,6 +60,15 @@ double vP2[3],vP4[3];//ideal values at the attaching points P2 and P4
 //        [1] Dx
 //        [2] Dy
 double Vservice[3];
+double ErrMatrix[Nptn+1][6];
+//                 [k][0]=ErrSlopeX
+//                 [k][1]=ErrSlopeY
+//                 [k][2]=ErrZ
+//                 [k][3]=ErrDevSlopeX
+//                 [k][4]=ErrDevSlopeY
+//                 [k][5]=ErrDevZ
+
+int occupy=0;
 
 QString dir;
 QString partner[Nptn+2]={"ENEA","FISE","DLR","NREL","SANDIA","Mean","Ideal"};
@@ -82,7 +92,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 8.0 19 February 2024\n\n");
+    printf("         version 9.0 4 June 2024\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -101,6 +111,8 @@ RRcmp::RRcmp(QWidget *parent)
     connect(ui->comboBox_SWrealignment, SIGNAL(currentIndexChanged(int)),this,SLOT(loadAll()));
     connect(ui->comboBox_spec, SIGNAL(currentIndexChanged(int)),this,SLOT(loadAll()));
     connect(ui->comboBox_par, SIGNAL(currentIndexChanged(int)),this,SLOT(displayAP()));
+    connect(ui->comboBox_iPtn0,SIGNAL(currentIndexChanged(int)),this,SLOT(setErr()));
+    connect(ui->comboBox_iPtn1,SIGNAL(currentIndexChanged(int)),this,SLOT(setErr()));
     connect(ui->spinBox_decimal,SIGNAL(valueChanged(int)),this,SLOT(displayAP()));
     connect(ui->checkBox_mrad,SIGNAL(stateChanged(int)),this,SLOT(displayAP()));
     connect(ui->checkBox_limComXY,SIGNAL(stateChanged(int)),this,SLOT(checkRange()));
@@ -110,6 +122,7 @@ RRcmp::RRcmp(QWidget *parent)
     connect(ui->pushButton_map_2, SIGNAL(pressed()),this,SLOT(map2()));
     connect(ui->pushButton_map_3, SIGNAL(pressed()),this,SLOT(map3()));
     connect(ui->pushButton_map_4, SIGNAL(pressed()),this,SLOT(map4()));
+
 
     idToLineEdit["lineEdit_EP1"]=ui->lineEdit_EP1;
     idToLineEdit["lineEdit_EP2"]=ui->lineEdit_EP2;
@@ -226,6 +239,40 @@ RRcmp::RRcmp(QWidget *parent)
         range[iP][5][0]=1.e+06;
         range[iP][5][1]=-1.e+06;
     }
+
+    QString fn=dir+"ErrMatrix.dat";
+    QFile file(fn);
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        printf("file %s not found!!!\n",fn.toStdString().c_str());
+        return;
+    }
+    QTextStream stream(&file);
+    QString line,pezzo;
+    QStringList List;
+    int iPtn=0;
+    double val;
+    //read data
+    line=stream.readLine();//the comment at the first row
+    do{
+        line=stream.readLine();
+        line=line.simplified();
+        List =line.split(" ");
+        int nV=List.count();
+        if(nV!=7){
+            printf("\nERROR: data file must consist of 7 column; @iC=%d found %d\n",iPtn,nV);
+            printf("skipped line %s\n",line.toStdString().c_str());
+            continue;
+        }
+        for(int k=0;k<6;k++){
+            pezzo=List.at(k+1).toLocal8Bit().constData();
+            val=pezzo.toDouble();
+            ErrMatrix[iPtn][k]=val;
+            cout<<"\t"<<val;
+        }
+        iPtn++;
+        cout<<"\n";
+    }while(!stream.atEnd());
+    file.close();
 }
 
 RRcmp::~RRcmp()
@@ -316,7 +363,7 @@ void RRcmp::loadData(int iPtn){
     fflush(stdout);
     QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        printf("file %s non trovato!!!\n",fileName.toStdString().c_str());
+        printf("file %s not found!!!\n",fileName.toStdString().c_str());
         idToCheckBox["checkBox_"+QString::number(iPtn)]->setCheckState(Qt::Unchecked);
         return;
     }
@@ -485,10 +532,12 @@ void RRcmp::checkRange(){
             for(int iP=0;iP<Npar;iP++){
                 S[j][i][iP][5][0]=0.;
                 S[j][i][iP][5][1]=0.;
+                S[j][i][iP][7][0]=0.;
+                S[j][i][iP][7][1]=0.;
             }
         }
     }
-    //mean
+    //mean profile
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
             for(int iPtn=0;iPtn<5;iPtn++){
@@ -496,22 +545,37 @@ void RRcmp::checkRange(){
                 if(state==Qt::Checked && S[j][i][0][iPtn][0]>0.5){
                     for(int iP=0;iP<Npar;iP++){
                         S[j][i][iP][5][0]++;
-                        S[j][i][iP][5][1]=S[j][i][iP][5][1]+S[j][i][iP][iPtn][1];
+                        S[j][i][iP][5][1]=S[j][i][iP][5][1]+S[j][i][iP][iPtn][1];//sumX
+                        S[j][i][iP][7][1]=S[j][i][iP][7][1]+pow(S[j][i][iP][iPtn][1],2.);//sumXX
                     }
                 }
             }
         }
     }
-    //Normalization
+    //mean and standard deviation both local and global
+    int Ns2=0;
+    double sglob[Npar];//sum for global computing
+    for(int k=0;k<Npar;k++)
+        sglob[k]=0.;
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
             for(int iP=0;iP<Npar;iP++){
                 if(S[j][i][iP][5][0]>0.5){
-                    S[j][i][iP][5][1]=S[j][i][iP][5][1]/S[j][i][iP][5][0];
+                    Ns2++;
+                    S[j][i][iP][5][1]=S[j][i][iP][5][1]/S[j][i][iP][5][0];//mean
+                    S[j][i][iP][7][1]=S[j][i][iP][7][1]/S[j][i][iP][5][0]-pow(S[j][i][iP][5][1],2.);//S^2
+                    sglob[iP]=sglob[iP]+S[j][i][iP][7][1];
+                    S[j][i][iP][7][1]=sqrt(S[j][i][iP][7][1]);//standard deviation
                 }
             }
         }
     }
+    for(int k=0;k<Npar;k++){
+        ErrMatrix[Nptn][k]=sqrt(sglob[k]/Ns2);
+        if(k==1 || k==2 || k==4 || k==5)
+            ErrMatrix[Nptn][k]=ErrMatrix[Nptn][k]*1000.;//mrad
+    }
+
     //reset S limits
     iMin=Ni;
     iMax=0;
@@ -656,6 +720,7 @@ void RRcmp::idealValue(){//values of the ideal parabolic profile
 
 
 void RRcmp::displayAP(){
+    occupy=1;
     int iPar=ui->comboBox_par->currentIndex();
     int iDec=ui->spinBox_decimal->value();
     printf("->displayAP for iPar=%d\n",iPar);
@@ -767,6 +832,35 @@ void RRcmp::displayAP(){
     sx=sx/double(Nloaded);
     sxx=sxx/double(Nloaded);
     ui->lineEdit_meanRMS->setText(QString::number(sx*fact,'f',iDec)+"+-"+QString::number(sqrt(sxx-sx*sx)*fact,'f',iDec));//RMS mean and std
+    occupy=0;
+    setErr();
+}
+
+void RRcmp::setErr(){
+    if(occupy>0)
+        return;
+    printf("->setErr\n");
+    int iPar=ui->comboBox_par->currentIndex();
+    QString Ptn0=ui->comboBox_iPtn0->currentText();
+    QString Ptn1=ui->comboBox_iPtn1->currentText();
+    double eVal=0.;
+    int iPtn0=-1;
+    if(Ptn0!="Ideal" && Ptn0!=""){
+        do{
+            iPtn0++;
+            eVal=ErrMatrix[iPtn0][iPar];
+        }while(partner[iPtn0]!=Ptn0);
+    }
+    ui->dSB_errPt0->setValue(eVal);
+    eVal=0.;
+    int iPtn1=-1;
+    if(Ptn0!="Ideal" && Ptn1!=""){
+        do{
+            iPtn1++;
+            eVal=ErrMatrix[iPtn1][iPar];
+        }while(partner[iPtn1]!=Ptn1);
+    }
+    ui->dSB_errPt1->setValue(eVal);
 }
 
 void RRcmp::map0(){
@@ -905,8 +999,16 @@ void RRcmp::compare(){
             iPtn1++;
         }
     }
-    if(iPtn0==iPtn1)
+    if(iPtn0==iPtn1){
+        ui->lineEdit_mean->setText("");
+        ui->lineEdit_RMS->setText("");
+        ui->lineEdit_PV->setText("");
+        ui->lineEdit_diffMin->setText("");
+        ui->lineEdit_diffMax->setText("");
+        ui->lineEdit_Ndat->setText("");
         return;
+    }
+    //common area?
     Qt::CheckState state;
     state=ui->checkBox_limComXY->checkState();
     int iComXY=0;
@@ -914,14 +1016,33 @@ void RRcmp::compare(){
         iComXY=1;
     if(iPtn0!=5 && iPtn1!=5)
         iComXY=0;
-    printf("->compare iPtn0=%d iPtn1=%d with iComXY=%d Nloaded=%d\n",iPtn0,iPtn1,iComXY,Nloaded);
+
+    //normalization factor
+    double normFact=1.;
+    state=ui->checkBox_norm->checkState();
+    if(state==Qt::Checked){
+        double sigPtn0=ui->dSB_errPt0->value();
+        double sigPtn1=ui->dSB_errPt1->value();
+        normFact=sqrt(pow(3.*sigPtn0,2.)+pow(3.*sigPtn1,2.));
+        if(!(normFact>0.)){
+            normFact=1.;
+            ui->checkBox_norm->setCheckState(Qt::Unchecked);
+        }
+        if(iPar==1 || iPar==2 || iPar==4 || iPar==5){
+            normFact=normFact/1000.;//mrad -> rad
+            ui->checkBox_mrad->setCheckState(Qt::Unchecked);
+        }
+    }
+
+    //analysis
+    printf("->compare iPtn0=%d iPtn1=%d with iComXY=%d Nloaded=%d normFact=%f\n",iPtn0,iPtn1,iComXY,Nloaded,normFact);
     int ndat=0;
     double Sx=0.,Sxx=0.,delta,PV,deltaMin=1.e+06,deltaMax=-1.e+06;
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
             if((iComXY==0 && S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5) ||
                 (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
-                delta=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
+                delta=(S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])/normFact;
                 deltaMin=min(deltaMin,delta);
                 deltaMax=max(deltaMax,delta);
                 Sx=Sx+delta;
@@ -974,11 +1095,11 @@ void RRcmp::compare(){
         }
         else
             MapMax=string.toDouble();
-        plotMapDiff(iPtn0,iPtn1,MapMin,MapMax);
+        plotMapDiff(iPtn0,iPtn1,MapMin,MapMax,normFact);
     }
 }
 
-void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
+void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax,double normFact){
     int iSpec=ui->comboBox_spec->currentIndex();
     int iPar=ui->comboBox_par->currentIndex();
     printf("->plotMatDiff iPtn0==%d iPtn1=%d iSpec=%d iPar=%d\n",iPtn0,iPtn1,iSpec,iPar);
@@ -996,7 +1117,7 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
         for(int j=jMin;j<=jMax;j++){
             if((iComXY==0 && S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5) ||
                 (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
-                val=((S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])-deltaMin)/rng;
+                val=((S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])/normFact-deltaMin)/rng;
                 pxColor(val);
                 for(int k=0;k<3;k++)
                     map.at<Vec3b>(iMax-i,jMax-j)[k] = static_cast<uint8_t>(Vservice[k]);
@@ -1019,7 +1140,7 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
         j=jP2;
         if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
             xPlotR[nDatR]=DS*(i-iP2);
-            yPlotR[nDatR]=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
+            yPlotR[nDatR]=(S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])/normFact;
             if(i==iP3)
              printf("nDat=%d xPlot=%f yPlot=%f valPtn1=%f valPtn0=%f\n",nDatR,xPlotR[nDatR],yPlotR[nDatR],S[j][i][iPar][iPtn1][1],S[j][i][iPar][iPtn0][1]);
             nDatR++;
@@ -1027,7 +1148,7 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax){
         j=jP1;
         if(S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5){
             xPlotL[nDatL]=DS*(i-iP2);
-            yPlotL[nDatL]=S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1];
+            yPlotL[nDatL]=(S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])/normFact;
             if(i==iP3)
              printf("nDat=%d xPlot=%f yPlot=%f valPtn1=%f valPtn0=%f\n",nDatL,xPlotL[nDatL],yPlotL[nDatL],S[j][i][iPar][iPtn1][1],S[j][i][iPar][iPtn0][1]);
             nDatL++;

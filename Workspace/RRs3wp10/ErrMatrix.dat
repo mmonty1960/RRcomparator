@@ -1,0 +1,6 @@
+Partner   ErrZ ErrSlopeX   ErrSlopeY    ErrDevZ    ErrDevSlopeX    ErrDevSlopeY
+ENEA    0.30    0.09    0.09    0.3    0.09    0.09
+FISE    0.13    0.30    0.18    0.13    0.30    0.18
+DLR 0.20    0.20    0.20    0.20    0.20    0.20
+NREL    0.26    0.12    0.12    0.26    0.12    0.12
+SANDIA    0.20 0.08    0.08    0.20 0.08    0.08
