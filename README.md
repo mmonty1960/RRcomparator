@@ -7,8 +7,9 @@ The user can:
 1) select one or more evaluators among ENEA, FISE, DLR, NREL, SANDIA, by ticking the respective checkBox
 2) select one specimen among 3 inner (#60, #61, #62) and 3 outer (#93, #97, #99)
 3) select one parameter among z(height), slopeX, slopeY, devZ, devSlopeX, devSlopeY
-4) plot the 2D contour map for the selected evaluator, specimen, and parameter
-5) launch the comparison between the results got from two evaluators, or one evaluator and “ideal” or “mean” (among the loaded experimental 3D shape) profile, obtaining: mean, RMS, Peak-Valley, Min and Max values, as well as the 2D contour map of the difference
+4) plot the 2D contour map and the plots of the sections across the attaching points in bended and flat directions for the selected evaluator, specimen, and parameter
+5) launch the comparison between the results got from two evaluators, or one evaluator and “ideal” or “mean” (among the loaded experimental 3D shape) profile, obtaining: mean, RMS, Peak-Valley, Min and Max values, as well as the 2D contour map of the difference; the difference can be normalized to the maximum error (3 sigma)
+6) enable the computing ex novo of the z (height) values by means of 2D-integration of the slopes data provided by each participants, starting from the attaching point P2 (the master one)
 
 The Graphical User Interface (GUI) contains 3 Tabs:
 

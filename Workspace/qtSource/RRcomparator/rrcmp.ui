@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1067</width>
-    <height>770</height>
+    <width>1123</width>
+    <height>774</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
        </font>
       </property>
       <property name="text">
-       <string>RRcomparator v9.0</string>
+       <string>RRcomparator v10.0</string>
       </property>
      </widget>
     </item>
@@ -167,6 +167,13 @@
           <string>SW realignment by devZ_exp</string>
          </property>
         </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBox_2Dintegration">
+        <property name="text">
+         <string>2D-Integration</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -465,10 +472,31 @@
           <item row="4" column="5">
            <widget class="QLineEdit" name="lineEdit_Dmin"/>
           </item>
+          <item row="1" column="6">
+           <widget class="QCheckBox" name="checkBox_vPro">
+            <property name="text">
+             <string>X-Profile</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="7">
+           <widget class="QCheckBox" name="checkBox_hPro">
+            <property name="text">
+             <string>Y-Profile</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="7">
            <widget class="QCheckBox" name="checkBox_showDiff">
             <property name="text">
              <string>Show diff</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <widget class="QCheckBox" name="checkBox_2Dcont">
+            <property name="text">
+             <string>2D-contour</string>
             </property>
            </widget>
           </item>
@@ -853,6 +881,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <widget class="QPushButton" name="pushButton_compare">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Compare</string>
            </property>
@@ -860,28 +894,70 @@
          </item>
          <item>
           <widget class="QCheckBox" name="checkBox_norm">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Normalized</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="comboBox_iPtn0"/>
+          <widget class="QComboBox" name="comboBox_iPtn0">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QDoubleSpinBox" name="dSB_errPt0">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="singleStep">
             <double>0.010000000000000</double>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="comboBox_iPtn1"/>
+          <widget class="QComboBox" name="comboBox_iPtn1">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QDoubleSpinBox" name="dSB_errPt1">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="singleStep">
             <double>0.010000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_sigma">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
           </widget>
          </item>
@@ -946,7 +1022,14 @@
          <item>
           <widget class="QCheckBox" name="checkBox_mapDiff">
            <property name="text">
-            <string>2D map &amp;&amp; profile plot</string>
+            <string>2D map</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_ProPlot">
+           <property name="text">
+            <string>Profile Plot</string>
            </property>
           </widget>
          </item>

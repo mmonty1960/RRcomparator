@@ -39,6 +39,7 @@ public Q_SLOTS:
     void idealValue();
     void checkRange();
     void setErr();
+    void shapeComputing(int iPtn);
 
 private:
     Ui::RRcmp *ui;
