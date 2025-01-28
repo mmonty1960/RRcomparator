@@ -54,7 +54,7 @@ double range[Npar][Nptn+1][5];
 //          [iPar][iPtn][1] max
 //          [iPar][iPtn][2] mean
 //          [iPar][iPtn][3] RMS
-//          [iPar][iPtn][4] Peak-Valley
+//          [iPar][iPtn][4] Peak-Valley (initially used as N counter)
 double vP2[3],vP4[3];//ideal values at the attaching points P2 and P4
 //        [0] z
 //        [1] Dx
@@ -92,7 +92,7 @@ RRcmp::RRcmp(QWidget *parent)
     printf("****************************************************\n");
     printf("              Program C++ RRcomparator\n\n");
     printf("\tSoftware to compare the results got in\n\tthe SFERA-III WP10 3D-shape round-robin \n");
-    printf("         version 10.0 24 June 2024\n\n");
+    printf("         version 11.0 15 January 2025\n\n");
     printf("       Main author: Marco Montecchi, ENEA (Italy)\n");
     printf("          email: marco.montecchi@enea.it\n");
     printf("          Porting to Windows by\n");
@@ -653,6 +653,11 @@ void RRcmp::checkRange(){
         }
     }
     //mean and standard deviation both local and global
+    state=ui->checkBox_limComXY->checkState();
+    int iComXY=0;
+    if(state==Qt::Checked)
+        iComXY=1;
+    printf("\tiComXY=%d\n",iComXY);
     int Ns2=0;
     double sglob[Npar];//sum for global computing
     for(int k=0;k<Npar;k++)
@@ -660,7 +665,7 @@ void RRcmp::checkRange(){
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
             for(int iP=0;iP<Npar;iP++){
-                if(S[j][i][iP][5][0]>0.5){
+                if((iComXY==0 && S[j][i][iP][5][0]>0.5) || (iComXY==1 && S[j][i][iP][5][0]==Nloaded)){
                     Ns2++;
                     S[j][i][iP][5][1]=S[j][i][iP][5][1]/S[j][i][iP][5][0];//mean
                     S[j][i][iP][7][1]=S[j][i][iP][7][1]/S[j][i][iP][5][0]-pow(S[j][i][iP][5][1],2.);//S^2
@@ -681,10 +686,6 @@ void RRcmp::checkRange(){
     iMax=0;
     jMin=Nj;
     jMax=0;
-    state=ui->checkBox_limComXY->checkState();
-    int iComXY=0;
-    if(state==Qt::Checked)
-        iComXY=1;
     for(int iP=0;iP<Npar;iP++){
         range[iP][5][0]=1.e+06; //Min
         range[iP][5][1]=-1.e+06;//Max
@@ -736,6 +737,12 @@ void RRcmp::checkRange(){
                 range[iP][iPtn][3]=sqrt(range[iP][iPtn][3]/range[iP][iPtn][4]);//RMS
                 range[iP][iPtn][4]=range[iP][iPtn][1]-range[iP][iPtn][0];      //Peak-Valley
             }
+        }
+        else{
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMin"]->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"xMax"]->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMin"]->setText("");
+            idToLineEdit["lineEdit_"+partnerChar[iPtn]+"yMax"]->setText("");
         }
     }
 
@@ -841,15 +848,15 @@ void RRcmp::displayAP(){
         offsetP3=vP4[iPar];
         offsetP4=vP4[iPar];
     }
-    ui->lineEdit_IP1->setText(QString::number(offsetP2,'f',iDec));
-    ui->lineEdit_IP2->setText(QString::number(offsetP2,'f',iDec));
-    ui->lineEdit_IP3->setText(QString::number(offsetP4,'f',iDec));
-    ui->lineEdit_IP4->setText(QString::number(offsetP4,'f',iDec));
     Qt::CheckState state;
     state=ui->checkBox_mrad->checkState();
     double fact=1.;
     if(state==Qt::Checked)
         fact=1000.;
+    ui->lineEdit_IP1->setText(QString::number(offsetP2*fact,'f',iDec));
+    ui->lineEdit_IP2->setText(QString::number(offsetP2*fact,'f',iDec));
+    ui->lineEdit_IP3->setText(QString::number(offsetP4*fact,'f',iDec));
+    ui->lineEdit_IP4->setText(QString::number(offsetP4*fact,'f',iDec));
     state=ui->checkBox_showDiff->checkState();
     int iShowDiff=0;
     if(state==Qt::Checked)
@@ -1192,8 +1199,8 @@ void RRcmp::compare(){
     int iComXY=0;
     if(state==Qt::Checked)
         iComXY=1;
-    if(iPtn0!=5 && iPtn1!=5)
-        iComXY=0;
+    //if(iPtn0!=5 && iPtn1!=5)
+    //    iComXY=0;
 
     //normalization factor
     double normFact=1.;
@@ -1221,15 +1228,23 @@ void RRcmp::compare(){
     else
         ui->lineEdit_sigma->setText("not normalized");
 
+    //unbiased for the mean values
+    int iUbs=0;
+    state=ui->checkBox_unbiased->checkState();
+    if(state==Qt::Checked)
+        iUbs=1;
+
     //analysis
-    printf("->compare iPtn0=%d iPtn1=%d with iComXY=%d Nloaded=%d normFact=%f\n",iPtn0,iPtn1,iComXY,Nloaded,normFact);
+    double bias=range[iPar][iPtn1][2]-range[iPar][iPtn0][2];
+    printf("->compare iPtn0=%d iPtn1=%d with iComXY=%d Nloaded=%d normFact=%f bias=%f\n",
+           iPtn0,iPtn1,iComXY,Nloaded,normFact,bias);
     int ndat=0;
     double Sx=0.,Sxx=0.,delta,PV,deltaMin=1.e+06,deltaMax=-1.e+06;
     for(int i=0;i<Ni;i++){
         for(int j=0;j<Nj;j++){
             if((iComXY==0 && S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5) ||
                 (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
-                delta=(S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])/normFact;
+                delta=(S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1]-iUbs*bias)/normFact;
                 deltaMin=min(deltaMin,delta);
                 deltaMax=max(deltaMax,delta);
                 Sx=Sx+delta;
@@ -1282,11 +1297,11 @@ void RRcmp::compare(){
         }
         else
             MapMax=string.toDouble();
-        plotMapDiff(iPtn0,iPtn1,MapMin,MapMax,normFact);
+        plotMapDiff(iPtn0,iPtn1,MapMin,MapMax,normFact,iUbs);
     }
 }
 
-void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax,double normFact){
+void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax,double normFact,int iUbs){
     int iSpec=ui->comboBox_spec->currentIndex();
     int iPar=ui->comboBox_par->currentIndex();
     printf("->plotMatDiff iPtn0==%d iPtn1=%d iSpec=%d iPar=%d\n",iPtn0,iPtn1,iSpec,iPar);
@@ -1304,7 +1319,7 @@ void RRcmp::plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax,d
         for(int j=jMin;j<=jMax;j++){
             if((iComXY==0 && S[j][i][iPar][iPtn0][0]>0.5 && S[j][i][iPar][iPtn1][0]>0.5) ||
                 (iComXY==1 && S[j][i][iPar][5][0]==Nloaded)){
-                val=((S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1])/normFact-deltaMin)/rng;
+                val=((S[j][i][iPar][iPtn1][1]-S[j][i][iPar][iPtn0][1]-iUbs*(range[iPar][iPtn1][2]-range[iPar][iPtn0][2]))/normFact-deltaMin)/rng;
                 pxColor(val);
                 for(int k=0;k<3;k++)
                     map.at<Vec3b>(iMax-i,jMax-j)[k] = static_cast<uint8_t>(Vservice[k]);

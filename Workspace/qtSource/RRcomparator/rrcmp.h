@@ -35,7 +35,7 @@ public Q_SLOTS:
     void map3();
     void map4();
     void plotMap(int iPtn);
-    void plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax,double normFact);
+    void plotMapDiff(int iPtn0, int iPtn1, double deltaMin, double deltaMax,double normFact,int iUbs);
     void idealValue();
     void checkRange();
     void setErr();
